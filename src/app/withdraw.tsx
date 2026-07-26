@@ -22,10 +22,10 @@ export default function WithdrawScreen() {
   const [amountError, setAmountError] = useState('');
   const [upiError, setUpiError] = useState('');
 
-  // Defaults match current backend fallbacks; overwritten once real config loads
-  const [tdsPercent, setTdsPercent] = useState(10);
-  const [feePercent, setFeePercent] = useState(2);
-
+const [tdsPercent, setTdsPercent] = useState<number | null>(null);
+  const [feePercent, setFeePercent] = useState<number | null>(null);
+  const [minWithdrawalInr, setMinWithdrawalInr] = useState<number | null>(null);
+  const [configError, setConfigError] = useState(false);
   useEffect(() => {
     const loadWallet = async () => {
       try {
@@ -36,13 +36,14 @@ export default function WithdrawScreen() {
         setLoading(false);
       }
     };
-    const fetchConfigs = async () => {
+const fetchConfigs = async () => {
       try {
-        const res = await apiClient.get('/system/configs?keys=TDS_PERCENTAGE,PLATFORM_FEE_PERCENTAGE');
-        if (typeof res.data?.TDS_PERCENTAGE === 'number') setTdsPercent(res.data.TDS_PERCENTAGE);
-        if (typeof res.data?.PLATFORM_FEE_PERCENTAGE === 'number') setFeePercent(res.data.PLATFORM_FEE_PERCENTAGE);
+        const res = await apiClient.get('/system/public-configs');
+      if (typeof res.data?.tdsPercentage === 'number') setTdsPercent(res.data.tdsPercentage);
+        if (typeof res.data?.platformFeePercentage === 'number') setFeePercent(res.data.platformFeePercentage);
+        if (typeof res.data?.minWithdrawalInr === 'number') setMinWithdrawalInr(res.data.minWithdrawalInr);
       } catch (error) {
-        console.error('Failed to fetch system configs, using defaults', error);
+        setConfigError(true);
       }
     };
     loadWallet();
@@ -68,8 +69,8 @@ export default function WithdrawScreen() {
     if (hasError) return;
 
     const amt = parseFloat(amount);
-    if (amt < 500) {
-      setAmountError('Minimum withdrawal is ₹500');
+if (amt < minWithdrawalInr!) {
+      setAmountError(`Minimum withdrawal is ₹${minWithdrawalInr}`);
       return;
     }
     if (amt > withdrawable) {
@@ -105,11 +106,45 @@ export default function WithdrawScreen() {
     return true;
   });
 
-  if (loading) {
+if (loading) {
     return (
       <View className="flex-1 bg-[#12081E] items-center justify-center">
         <ActivityIndicator size="large" color="#A855F7" />
       </View>
+    );
+  }
+
+if (configError || tdsPercent === null || feePercent === null || minWithdrawalInr === null) {
+    return (
+      <SafeScreen edgeToEdgeBottom className="bg-[#12081E] flex-1">
+        <View className="flex-row items-center justify-center px-4 pt-4 pb-4 relative">
+          <Pressable onPress={() => router.back()} className="absolute left-4 p-2 -ml-2 z-10 active:opacity-70">
+            <ChevronLeft color="white" size={28} />
+          </Pressable>
+          <Text className="text-white font-bold text-lg tracking-wide">Creator Rewards</Text>
+        </View>
+        <View className="flex-1 items-center justify-center px-8 gap-4">
+          <AlertCircle size={48} color="#EF4444" />
+          <Text className="text-white font-bold text-base text-center">Platform configuration unavailable</Text>
+          <Text className="text-gray-400 text-sm text-center">Withdrawal rates could not be loaded from the server. Please try again.</Text>
+          <Pressable
+            onPress={() => {
+              setConfigError(false);
+              setTdsPercent(null);
+              setFeePercent(null);
+              setLoading(true);
+              fetchWallet().finally(() => setLoading(false));
+              apiClient.get('/system/public-configs').then((res) => {
+                if (typeof res.data?.tdsPercentage === 'number') setTdsPercent(res.data.tdsPercentage);
+                if (typeof res.data?.platformFeePercentage === 'number') setFeePercent(res.data.platformFeePercentage);
+              }).catch(() => setConfigError(true));
+            }}
+            className="bg-[#A855F7] px-8 py-3 rounded-xl"
+          >
+            <Text className="text-white font-bold">Retry</Text>
+          </Pressable>
+        </View>
+      </SafeScreen>
     );
   }
 

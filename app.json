@@ -106,7 +106,9 @@
       "@react-native-google-signin/google-signin",
       "expo-sharing",
       "expo-localization",
-      "expo-web-browser"
+      "expo-web-browser",
+      "@sentry/react-native",
+      "@react-native-firebase/analytics"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -114,7 +116,9 @@
     },
     "extra": {
       "router": {},
-      "eas": {}
+      "eas": {
+        "projectId": "5cb6a89e-146c-48b1-bb36-9dd8a80634ca"
+      }
     }
   }
 }

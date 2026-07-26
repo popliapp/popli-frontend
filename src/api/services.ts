@@ -48,10 +48,12 @@ export const notificationsApi = {
 
 export const walletApi = {
   getWallet: () => apiClient.get('/wallet'),
-  recharge: (amount: number) => apiClient.post('/wallet/recharge', { amount }),
-  withdraw: (amount: number, method: string, details: string) => apiClient.post('/wallet/withdraw', { amount, method, details }),
+  createRechargeOrder: (packageId: string) => apiClient.post('/wallet/recharge/create-order', { packageId }),
+  verifyRechargePayment: (razorpayOrderId: string, razorpayPaymentId: string, razorpaySignature: string) =>
+    apiClient.post('/wallet/recharge/verify', { razorpayOrderId, razorpayPaymentId, razorpaySignature }),
+  getPaymentHistory: () => apiClient.get('/wallet/payments'),
+  withdraw: (amount: number, upiId: string) => apiClient.post('/wallet/withdraw', { amount, upiId }),
 };
-
 export const emailOtpApi = {
   sendOtp: (email: string) => apiClient.post('/auth/email/send-otp', { email }),
   verifyOtp: (email: string, otp: string) => apiClient.post('/auth/email/verify-otp', { email, otp }),

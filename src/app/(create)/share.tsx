@@ -48,7 +48,7 @@ export default function ShareScreen() {
       return;
     }
 
-    // Instead of mocking, we route to share-story.tsx to do the actual Cloudinary upload
+  
     router.push({
       pathname: '/(create)/share-story',
       params: {

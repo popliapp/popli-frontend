@@ -412,24 +412,31 @@ return (
           ) : null}
         </View>
 
-        {/* Terms */}
-        <Pressable
-          onPress={() => { setAgreeTerms(!agreeTerms); if (errors.agreeTerms) setErrors(prev => ({ ...prev, agreeTerms: undefined })); }}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 }}
-        >
-          <View style={{
-            width: 20, height: 20, borderRadius: 6,
-            backgroundColor: agreeTerms ? '#FF2D6B' : 'rgba(255,255,255,0.06)',
-            borderWidth: 1,
-            borderColor: errors.agreeTerms ? '#FF4444' : agreeTerms ? '#FF2D6B' : 'rgba(255,255,255,0.2)',
-            alignItems: 'center', justifyContent: 'center',
-          }}>
+{/* Terms */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+          <Pressable
+            onPress={() => { setAgreeTerms(!agreeTerms); if (errors.agreeTerms) setErrors(prev => ({ ...prev, agreeTerms: undefined })); }}
+            style={{
+              width: 20, height: 20, borderRadius: 6,
+              backgroundColor: agreeTerms ? '#FF2D6B' : 'rgba(255,255,255,0.06)',
+              borderWidth: 1,
+              borderColor: errors.agreeTerms ? '#FF4444' : agreeTerms ? '#FF2D6B' : 'rgba(255,255,255,0.2)',
+              alignItems: 'center', justifyContent: 'center',
+            }}
+          >
             {agreeTerms && <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>✓</Text>}
+          </Pressable>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
+            <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>I agree to the </Text>
+     <Pressable onPress={() => router.push({ pathname: '/(auth)/legal', params: { type: 'terms' } })}>
+              <Text style={{ color: '#FF2D6B', fontSize: 13, textDecorationLine: 'underline' }}>Terms of Service</Text>
+            </Pressable>
+            <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13 }}> and </Text>
+            <Pressable onPress={() => router.push({ pathname: '/(auth)/legal', params: { type: 'privacy' } })}>
+              <Text style={{ color: '#FF2D6B', fontSize: 13, textDecorationLine: 'underline' }}>Privacy Policy</Text>
+            </Pressable>
           </View>
-          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, flex: 1 }}>
-            I agree to the <Text style={{ color: '#FF2D6B' }}>Terms of Service</Text> and <Text style={{ color: '#FF2D6B' }}>Privacy Policy</Text>
-          </Text>
-        </Pressable>
+        </View>
         {errors.agreeTerms ? <Text style={{ color: '#FF4444', fontSize: 12, marginBottom: 8 }}>{errors.agreeTerms}</Text> : null}
 
         {errors.api ? (

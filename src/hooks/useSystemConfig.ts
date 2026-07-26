@@ -12,9 +12,9 @@ export interface CoinPackage {
   description?: string;
   isPopular: boolean;
   isRecommended: boolean;
-  isActive: boolean;
   sortOrder: number;
 }
+
 export interface GiftItem {
   id: string;
   name: string;
@@ -30,57 +30,48 @@ export interface SystemConfig {
   viewRatePer1000: number;
   minWithdrawalInr: number;
   giftCreatorSharePercent: number;
+  giftCoinToInrRate: number;
   viewerCoinRewardPerView: number;
   viewerCoinMaxDaily: number;
   likerCoinRewardPer2Likes: number;
   likerCoinMaxDaily: number;
   coinPurchasePricePerCoin: number;
   coinWithdrawalRedeemRate: number;
+  tdsPercentage: number;
+  platformFeePercentage: number;
+  referralCreatorReward: number;
+  referralStandardReward: number;
+  referralSuperReward: number;
   coinPackages: CoinPackage[];
   gifts: GiftItem[];
 }
 
-const DEFAULTS: SystemConfig = {
-  viewRatePer1000: 5,
-  minWithdrawalInr: 500,
-  giftCreatorSharePercent: 60,
-  viewerCoinRewardPerView: 10,
-  viewerCoinMaxDaily: 200,
-  likerCoinRewardPer2Likes: 1,
-  likerCoinMaxDaily: 50,
-  coinPurchasePricePerCoin: 1.25,
-  coinWithdrawalRedeemRate: 0.85,
-  coinPackages: [],
-  gifts: [],
-};
-
 let cachedConfig: SystemConfig | null = null;
 let fetchPromise: Promise<SystemConfig> | null = null;
 
-async function fetchSystemConfig(): Promise<SystemConfig> {
+async function loadSystemConfig(): Promise<SystemConfig> {
   if (cachedConfig) return cachedConfig;
   if (fetchPromise) return fetchPromise;
 
   fetchPromise = apiClient
     .get('/system/public-configs')
     .then((res) => {
-      cachedConfig = { ...DEFAULTS, ...res.data };
+      cachedConfig = res.data as SystemConfig;
       fetchPromise = null;
-      return cachedConfig!;
+      return cachedConfig;
     })
-    .catch(() => {
+    .catch((err) => {
       fetchPromise = null;
-      return DEFAULTS;
+      throw err;
     });
 
   return fetchPromise;
 }
 
 export function useSystemConfig() {
-  const [config, setConfig] = useState<SystemConfig>(
-    cachedConfig ?? DEFAULTS,
-  );
-  const [loading, setLoading] = useState(!cachedConfig);
+  const [config, setConfig] = useState<SystemConfig | null>(cachedConfig);
+  const [loading, setLoading] = useState(cachedConfig === null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (cachedConfig) {
@@ -88,24 +79,34 @@ export function useSystemConfig() {
       setLoading(false);
       return;
     }
-    fetchSystemConfig().then((c) => {
-      setConfig(c);
-      setLoading(false);
-    });
+    loadSystemConfig()
+      .then((c) => {
+        setConfig(c);
+        setLoading(false);
+      })
+      .catch((e) => {
+        setError(e?.response?.data?.message ?? 'Failed to load platform configuration');
+        setLoading(false);
+      });
   }, []);
 
-  // Call this to force a refresh (e.g. after admin changes a config)
   const refresh = () => {
     cachedConfig = null;
+    fetchPromise = null;
     setLoading(true);
-    fetchSystemConfig().then((c) => {
-      setConfig(c);
-      setLoading(false);
-    });
+    setError(null);
+    loadSystemConfig()
+      .then((c) => {
+        setConfig(c);
+        setLoading(false);
+      })
+      .catch((e) => {
+        setError(e?.response?.data?.message ?? 'Failed to load platform configuration');
+        setLoading(false);
+      });
   };
 
-  return { ...config, loading, refresh };
+  return { config, loading, error, refresh };
 }
 
-// One-shot fetch for use outside of components (e.g. in Zustand actions)
-export { fetchSystemConfig };
+export { loadSystemConfig };

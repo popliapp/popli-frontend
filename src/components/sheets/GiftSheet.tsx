@@ -39,7 +39,8 @@ const [selectedGiftId, setSelectedGiftId] = useState<string>('rose');
   const router = useRouter();
   const insets = useSafeAreaInsets();
  const { coinBalance, sendGiftCoins, fetchWallet } = useWalletStore();
-  const { gifts } = useSystemConfig();
+const { config, loading: configLoading } = useSystemConfig();
+  const gifts = config?.gifts ?? [];
 
   useEffect(() => {
     if (isOpen) {
@@ -47,7 +48,7 @@ const [selectedGiftId, setSelectedGiftId] = useState<string>('rose');
     }
   }, [isOpen]);
 
-const selectedGift = gifts.find((g) => g.id === selectedGiftId) ?? gifts[0];
+const selectedGift = gifts.find((g) => g.id === selectedGiftId) ?? gifts[0] ?? null;
 
   const handleSendGift = async () => {
     if (!reel || isSending) return;
@@ -69,6 +70,8 @@ const selectedGift = gifts.find((g) => g.id === selectedGiftId) ?? gifts[0];
     }
   };
 if (!reel) return null;
+if (configLoading) return null;
+if (!selectedGift) return null;
 
   return (
     <Modal transparent visible={isOpen} animationType="none" onRequestClose={onClose}>

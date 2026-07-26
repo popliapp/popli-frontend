@@ -69,6 +69,29 @@ export function getHaversineDistance(
   return Math.round(distance * 10) / 10; // Round to 1 decimal place
 }
 
+export type LocationServiceError = 'PERMISSION_DENIED' | 'GPS_UNAVAILABLE' | 'GEOCODE_FAILED';
+
+export interface ReverseGeocodeResult {
+  city: string;
+  fullAddress: string;
+}
+
+export interface LocationDetailResult {
+  success: true;
+  city: string;
+  fullAddress: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface LocationErrorResult {
+  success: false;
+  error: LocationServiceError;
+  message: string;
+}
+
+export type LocationResult = LocationDetailResult | LocationErrorResult;
+
 export async function requestGPSLocation(askIfNotGranted = false): Promise<{
   latitude: number;
   longitude: number;
@@ -83,20 +106,16 @@ export async function requestGPSLocation(askIfNotGranted = false): Promise<{
       if (status !== 'granted') return null;
     }
 
- const location = await Location.getCurrentPositionAsync({
+    const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
     });
     const { latitude, longitude } = location.coords;
 
-    // Reverse geocode to find city
-    const reverseGeocode = await Location.reverseGeocodeAsync({
-      latitude,
-      longitude,
-    });
+    const reverseGeocode = await Location.reverseGeocodeAsync({ latitude, longitude });
 
-    let city = 'Indore'; // Default fallback city
+    let city = '';
     if (reverseGeocode && reverseGeocode.length > 0) {
-      city = reverseGeocode[0].city || reverseGeocode[0].subregion || 'Indore';
+      city = reverseGeocode[0].city || reverseGeocode[0].subregion || '';
     }
 
     return { latitude, longitude, city };
@@ -106,4 +125,87 @@ export async function requestGPSLocation(askIfNotGranted = false): Promise<{
   }
 }
 
+export async function detectCurrentLocationForKYC(): Promise<LocationResult> {
+  let permissionStatus: Location.PermissionStatus;
+
+  try {
+    const { status: existing } = await Location.getForegroundPermissionsAsync();
+    if (existing === 'granted') {
+      permissionStatus = existing;
+    } else {
+      const { status: requested } = await Location.requestForegroundPermissionsAsync();
+      permissionStatus = requested;
+    }
+  } catch {
+    return {
+      success: false,
+      error: 'GPS_UNAVAILABLE',
+      message: 'Failed to request location permission.',
+    };
+  }
+
+  if (permissionStatus !== 'granted') {
+    return {
+      success: false,
+      error: 'PERMISSION_DENIED',
+      message: 'Location permission denied. Please enable it in your device settings.',
+    };
+  }
+
+  let latitude: number;
+  let longitude: number;
+
+  try {
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+    latitude = location.coords.latitude;
+    longitude = location.coords.longitude;
+  } catch {
+    return {
+      success: false,
+      error: 'GPS_UNAVAILABLE',
+      message: 'Unable to fetch GPS coordinates. Please try again.',
+    };
+  }
+
+  try {
+    const results = await Location.reverseGeocodeAsync({ latitude, longitude });
+
+    if (!results || results.length === 0) {
+      return {
+        success: false,
+        error: 'GEOCODE_FAILED',
+        message: 'Could not determine address. Please enter manually.',
+      };
+    }
+
+    const r = results[0];
+    const city = r.city || r.subregion || r.district || '';
+    const addressParts = [
+      r.streetNumber,
+      r.street,
+      r.subregion,
+      r.city,
+      r.region,
+      r.postalCode,
+      r.country,
+    ].filter(Boolean);
+    const fullAddress = addressParts.join(', ');
+
+    return {
+      success: true,
+      city,
+      fullAddress,
+      latitude,
+      longitude,
+    };
+  } catch {
+    return {
+      success: false,
+      error: 'GEOCODE_FAILED',
+      message: 'Geocoding failed. Please enter your address manually.',
+    };
+  }
+}
 

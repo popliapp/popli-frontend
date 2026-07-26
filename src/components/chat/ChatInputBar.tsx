@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming, withSpring, int
 import { useKeyboardHandler } from 'react-native-keyboard-controller';
 import { Plus, Camera, Image as ImageIcon, Mic, Send, X, Smile, Square } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { uploadToCloudinary } from '../../api/upload'; // fallback if needed, or we just mock voice for now
+import { uploadImageToR2 } from '../../api/upload';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { Audio } = require('expo-audio');
@@ -89,9 +89,9 @@ export default function ChatInputBar({
         
         console.log('[DEBUG-TRACE] 1. Selected asset URI:', fileUri, 'Type:', type);
         
-        const uploadedUrl = await uploadToCloudinary(fileUri, type, 'chats');
+        const uploadedUrl = await uploadImageToR2(fileUri, 'chats');
         
-        console.log('[DEBUG-TRACE] 2. Cloudinary Upload response URL:', uploadedUrl);
+     
         
         onSend('', uploadedUrl);
       } catch (err) {

@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store';
 import { ChevronLeft, Camera, Globe } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { apiClient } from '../../api/client';
+import { uploadImageToR2 } from '../../api/upload';
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -80,7 +81,7 @@ const [isCheckingUsername, setIsCheckingUsername] = useState(false);
     return () => clearTimeout(delayDebounceFn);
   }, [username]);
 
-  const pickImage = async () => {
+const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'] as any,
@@ -92,50 +93,16 @@ const [isCheckingUsername, setIsCheckingUsername] = useState(false);
       if (!result.canceled) {
         setIsUploading(true);
         const imageUri = result.assets[0].uri;
-        
-        // Get Cloudinary signature from backend
-        const sigResponse = await apiClient.get('/upload/signature?folder=profiles');
-        const { timestamp, signature, cloudName, apiKey, folder } = sigResponse.data;
-
-        // Construct FormData for Cloudinary
-        const formData = new FormData();
-        const fileType = imageUri.split('.').pop() || 'jpg';
-        formData.append('file', {
-          uri: imageUri,
-          type: `image/${fileType}`,
-          name: `profile-${Date.now()}.${fileType}`
-        } as any);
-        formData.append('api_key', apiKey);
-        formData.append('timestamp', timestamp.toString());
-        formData.append('signature', signature);
-        formData.append('folder', folder);
-
-        // Upload directly to Cloudinary
-        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-          method: 'POST',
-          body: formData,
-          headers: { Accept: 'application/json' }
-        });
-        
-        if (!uploadRes.ok) {
-          throw new Error('Cloudinary upload failed');
-        }
-        
-        const uploadData = await uploadRes.json();
-        if (uploadData.secure_url) {
-          setAvatar(uploadData.secure_url);
-        } else {
-          throw new Error('Cloudinary upload failed');
-        }
+        const uploadedUrl = await uploadImageToR2(imageUri, 'profiles');
+        setAvatar(uploadedUrl);
       }
     } catch (error) {
       console.error('Image upload error:', error);
-     showError('Failed to upload image. Please try again.');
+      showError('Failed to upload image. Please try again.');
     } finally {
       setIsUploading(false);
     }
   };
-
   const handleNext = async () => {
     const currentName = name?.trim();
     const currentUsername = username?.trim().toLowerCase();

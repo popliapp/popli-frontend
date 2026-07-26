@@ -102,14 +102,7 @@ export const useStoryStore = create<StoryState>()(
           const res = await apiClient.get('/stories');
           if (res.data[0]?.viewers?.length > 0) console.log('[VIEWERS-DEBUG]', res.data[0].viewers[0]);
           
-          const formatMediaUrl = (url: string) => {
-            if (!url) return '';
-            let finalUrl = url;
-            if (finalUrl.includes('res.cloudinary.com') && !finalUrl.includes('q_auto')) {
-              finalUrl = finalUrl.replace('/upload/', '/upload/q_auto,f_auto,w_720,c_limit/');
-            }
-            return finalUrl;
-          };
+   const formatMediaUrl = (url: string) => url || '';
 
           const formattedStories = res.data.map((s: any) => ({
         id: s.id,
@@ -145,14 +138,7 @@ export const useStoryStore = create<StoryState>()(
           const res = await apiClient.get(`/stories/story/${storyId}`);
           const s = res.data;
           
-          const formatMediaUrl = (url: string) => {
-            if (!url) return '';
-            let finalUrl = url;
-            if (finalUrl.includes('res.cloudinary.com') && !finalUrl.includes('q_auto')) {
-              finalUrl = finalUrl.replace('/upload/', '/upload/q_auto,f_auto,w_720,c_limit/');
-            }
-            return finalUrl;
-          };
+     const formatMediaUrl = (url: string) => url || '';
 
           const formattedStory: Story = {
            id: s.id,

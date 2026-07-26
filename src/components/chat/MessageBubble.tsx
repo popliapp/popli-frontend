@@ -59,14 +59,7 @@ export default function MessageBubble({ msg, onReply, onImagePress, otherUsernam
 
   const swipeableRef = useRef(null);
 
-  const getThumbnailUrl = (url: string) => {
-    if (!url) return '';
-    if (url.includes('cloudinary') && url.endsWith('.mp4')) {
-      return url.replace('.mp4', '.jpg');
-    }
-    return url;
-  };
-
+const getThumbnailUrl = (url: string) => url || '';
   const renderContent = () => {
     if (msg.isStoryMention) {
       return (

@@ -21,8 +21,11 @@ import {
   MapPin,
   Calendar,
   Zap,
-  QrCode
+  QrCode,
+  Rocket,
+  Navigation,
 } from 'lucide-react-native';
+import { detectCurrentLocationForKYC } from '../services/geoService';
 import { MotiView } from 'moti';
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
@@ -59,10 +62,14 @@ export default function KYCScreen() {
   const kyc = useKYCStore();
   
   // Local verification loadings
-  const [isVerifyingPan, setIsVerifyingPan] = useState(false);
+const [isVerifyingPan, setIsVerifyingPan] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [locationError, setLocationError] = useState('');
   const [isVerifyingAadhar, setIsVerifyingAadhar] = useState(false);
   const [isVerifyingUpi, setIsVerifyingUpi] = useState(false);
   const [isVerifyingBank, setIsVerifyingBank] = useState(false);
+  const [aadharOtp, setAadharOtp] = useState('');
+  const [showAadharOtpInput, setShowAadharOtpInput] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isAccountTypeDropdownOpen, setIsAccountTypeDropdownOpen] = useState(false);
 
@@ -252,58 +259,74 @@ export default function KYCScreen() {
     }
   };
 
-  const handlePANVerify = async () => {
+const handlePANVerify = async () => {
     const cleanPan = kyc.panNumber.trim().toUpperCase();
     if (!cleanPan) {
       setPanError('Please enter a PAN card number.');
       triggerShake(panShake);
       return;
     }
-
-    const isValid = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleanPan);
-    if (!isValid) {
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleanPan)) {
       setPanError('Invalid PAN format. Standard format: ABCDE1234F');
       triggerShake(panShake);
       return;
     }
-
+    if (!kyc.fullName.trim()) {
+      setPanError('Please enter your full name in Step 1 before verifying PAN.');
+      triggerShake(panShake);
+      return;
+    }
     setPanError('');
     setIsVerifyingPan(true);
     const result = await kyc.verifyPAN();
     setIsVerifyingPan(false);
-    
-    if (!result) {
-      setPanError('Verification failed. Invalid PAN details.');
+    if (!result.success) {
+      setPanError(result.error ?? 'Verification failed.');
       triggerShake(panShake);
     }
   };
 
-  const handleAadharVerify = async () => {
+  const handleAadharInitiateOtp = async () => {
     const rawAadhar = kyc.aadharNumber.replace(/\s/g, '');
     if (!rawAadhar) {
-      setAadharError('Please enter Aadhar Number.');
+      setAadharError('Please enter Aadhaar number.');
       triggerShake(aadharShake);
       return;
     }
-
-    const isValid = /^[0-9]{12}$/.test(rawAadhar);
-    if (!isValid) {
-      setAadharError('Invalid Aadhar format. Must be a 12-digit number.');
+    if (!/^[0-9]{12}$/.test(rawAadhar)) {
+      setAadharError('Invalid Aadhaar format. Must be a 12-digit number.');
       triggerShake(aadharShake);
       return;
     }
-
     setAadharError('');
     setIsVerifyingAadhar(true);
-    const result = await kyc.verifyAadhar();
+    const result = await kyc.initiateAadharOtp();
     setIsVerifyingAadhar(false);
-    
-    if (!result) {
-      setAadharError('Verification failed. Invalid Aadhar details.');
+    if (result.success) {
+      setShowAadharOtpInput(true);
+    } else {
+      setAadharError(result.error ?? 'Failed to send OTP.');
       triggerShake(aadharShake);
     }
   };
 
+  const handleAadharVerifyOtp = async () => {
+    if (!aadharOtp.trim() || aadharOtp.trim().length !== 6) {
+      setAadharError('Please enter the 6-digit OTP sent to your Aadhaar-linked mobile.');
+      return;
+    }
+    setAadharError('');
+    setIsVerifyingAadhar(true);
+    const result = await kyc.verifyAadharOtp(aadharOtp.trim());
+    setIsVerifyingAadhar(false);
+    if (!result.success) {
+      setAadharError(result.error ?? 'OTP verification failed.');
+      triggerShake(aadharShake);
+    } else {
+      setShowAadharOtpInput(false);
+      setAadharOtp('');
+    }
+  };
 const handleStep2Submit = () => {
     if (!kyc.isPanVerified || !kyc.isAadharVerified) {
       showError('Please verify both PAN and Aadhaar cards first');
@@ -363,29 +386,27 @@ const handleStep2Submit = () => {
     setErrors({});
     
     // Proceed with linking (prefer UPI if valid, else Bank)
-    if (upi && !newErrors.upiId) {
+if (upi && !newErrors.upiId) {
       setIsVerifyingUpi(true);
-      const result = await kyc.linkUPI();
+      const result = await kyc.verifyUPI();
       setIsVerifyingUpi(false);
-      
-      if (result) {
-        await kyc.submitKYCToBackend();
-        kyc.updateKYCField({ isBankLinked: true, kycCompleted: true });
-        setShowSuccessModal(true);
+      if (result.success) {
+        const submitted = await kyc.submitKYCToBackend();
+        if (submitted) setShowSuccessModal(true);
+        else setErrors({ upiId: 'Submission failed. Please try again.' });
       } else {
-        setErrors({ upiId: 'Verification failed. Please review your UPI ID.' });
+        setErrors({ upiId: result.error ?? 'Verification failed. Please review your UPI ID.' });
       }
     } else if (bankAcc && ifsc && !newErrors.bankAccount && !newErrors.ifscCode) {
       setIsVerifyingBank(true);
-      const result = await kyc.linkBank();
+      const result = await kyc.verifyBank();
       setIsVerifyingBank(false);
-      
-     if (result) {
-        await kyc.submitKYCToBackend();
-        kyc.updateKYCField({ isBankLinked: true, kycCompleted: true });
-        setShowSuccessModal(true);
+      if (result.success) {
+        const submitted = await kyc.submitKYCToBackend();
+        if (submitted) setShowSuccessModal(true);
+        else setErrors({ bankAccount: 'Submission failed. Please try again.' });
       } else {
-        setErrors(prev => ({ ...prev, bankAccount: 'Verification failed. Please review your banking details.' }));
+        setErrors({ bankAccount: result.error ?? 'Verification failed. Please review your banking details.' });
       }
     }
   };
@@ -398,7 +419,31 @@ const handleStep2Submit = () => {
     }
   };
 
-const handleOpenHelp = () => {
+const handleDetectLocation = async () => {
+    setLocationError('');
+    setIsFetchingLocation(true);
+    const result = await detectCurrentLocationForKYC();
+    setIsFetchingLocation(false);
+
+    if (!result.success) {
+      setLocationError(result.message);
+      return;
+    }
+
+    if (result.city) {
+      kyc.updateKYCField({ city: result.city });
+      if (errors.city) setErrors(prev => ({ ...prev, city: undefined }));
+    }
+
+    if (result.fullAddress) {
+      kyc.updateKYCField({ address: result.fullAddress });
+      if (errors.address) setErrors(prev => ({ ...prev, address: undefined }));
+    }
+
+    setShowCitySuggestions(false);
+  };
+
+  const handleOpenHelp = () => {
     showInfo('KYC activates view-to-cash payouts (₹5/1,000 views) and fan gifting.', { duration: 5000 });
   };
   // Render different header indicators for step progression matching Figma
@@ -499,9 +544,12 @@ const handleOpenHelp = () => {
             <View className="bg-[#190C2C]/50 border border-white/5 rounded-[32px] overflow-hidden">
               {/* Identity details wrapper */}
               <View className="p-5 border-b border-white/5">
-                <Text className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-4 flex-row items-center">
-                  🛡️ IDENTITY DETAILS
-                </Text>
+             <View className="flex-row items-center gap-2 mb-4">
+                  <ShieldCheck size={12} color="rgba(255,255,255,0.5)" />
+                  <Text className="text-white/50 text-[10px] font-bold uppercase tracking-wider">
+                    IDENTITY DETAILS
+                  </Text>
+                </View>
                 
                 <View className="mb-4">
                   <Text className="text-white/60 text-[10px] font-bold uppercase pl-1 mb-2">Full Name</Text>
@@ -592,8 +640,24 @@ const handleOpenHelp = () => {
                     )}
                   </View>
                   
-                  <View className="flex-1 ml-2 z-50">
-                    <Text className="text-white/60 text-[10px] font-bold uppercase pl-1 mb-2">Location</Text>
+               <View className="flex-1 ml-2 z-50">
+                    <View className="flex-row items-center justify-between pl-1 mb-2">
+                      <Text className="text-white/60 text-[10px] font-bold uppercase">Location</Text>
+                      <Pressable
+                        onPress={handleDetectLocation}
+                        disabled={isFetchingLocation}
+                        className="flex-row items-center gap-1 active:opacity-70"
+                      >
+                        {isFetchingLocation ? (
+                          <ActivityIndicator size={10} color="#A855F7" />
+                        ) : (
+                          <Navigation size={10} color="#A855F7" />
+                        )}
+                        <Text className="text-[#A855F7] text-[9px] font-bold uppercase">
+                          {isFetchingLocation ? 'Detecting...' : 'Auto Detect'}
+                        </Text>
+                      </Pressable>
+                    </View>
                     <View className="relative justify-center z-50">
                       <TextInput
                         value={kyc.city}
@@ -649,9 +713,15 @@ const handleOpenHelp = () => {
                         </View>
                       )}
                     </View>
-                    {errors.city && (
+               {errors.city && (
                       <Text className="text-red-500 text-[10px] pl-1 mt-1 font-semibold">{errors.city}</Text>
                     )}
+                    {locationError ? (
+                      <View className="flex-row items-center gap-1 mt-1 pl-1">
+                        <AlertCircle size={10} color="#EF4444" />
+                        <Text className="text-red-400 text-[9px] font-semibold flex-1">{locationError}</Text>
+                      </View>
+                    ) : null}
                   </View>
                 </View>
 
@@ -678,9 +748,12 @@ const handleOpenHelp = () => {
 
               {/* Creator Category Card Grid */}
               <View className="p-5">
-                <Text className="text-white/50 text-[10px] font-bold uppercase tracking-wider mb-1">
-                  🎭 CREATOR CATEGORY
-                </Text>
+              <View className="flex-row items-center gap-2 mb-1">
+                  <Theater size={12} color="rgba(255,255,255,0.5)" />
+                  <Text className="text-white/50 text-[10px] font-bold uppercase tracking-wider">
+                    CREATOR CATEGORY
+                  </Text>
+                </View>
                 <Text className="text-[#9CA3AF] text-[10px] leading-4 mb-4">
                   Select the niche that best describes your content portfolio.
                 </Text>
@@ -856,21 +929,53 @@ const handleOpenHelp = () => {
                   <Text className="text-red-500 text-[10px] pl-1 pb-3 font-semibold">{aadharError}</Text>
                 ) : null}
 
-                {!kyc.isAadharVerified && (
+      {!kyc.isAadharVerified && !showAadharOtpInput && (
                   <Pressable
-                    onPress={handleAadharVerify}
+                    onPress={handleAadharInitiateOtp}
                     disabled={isVerifyingAadhar}
-                    style={({ pressed }) => ({
-                      transform: [{ scale: pressed ? 0.98 : 1 }]
-                    })}
+                    style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.98 : 1 }] })}
                     className="bg-[#FCD34D] h-11 rounded-xl items-center justify-center active:scale-[0.98]"
                   >
                     {isVerifyingAadhar ? (
                       <ActivityIndicator size="small" color="#1D1037" />
                     ) : (
-                      <Text className="text-[#1D1037] text-xs font-black uppercase">Verify</Text>
+                      <Text className="text-[#1D1037] text-xs font-black uppercase">Send OTP</Text>
                     )}
                   </Pressable>
+                )}
+
+                {!kyc.isAadharVerified && showAadharOtpInput && (
+                  <View className="gap-3">
+                    <Text className="text-white/50 text-[10px] font-bold uppercase pl-1">Enter OTP sent to Aadhaar-linked mobile</Text>
+                    <TextInput
+                      value={aadharOtp}
+                      onChangeText={(v) => { setAadharOtp(v.replace(/[^0-9]/g, '')); if (aadharError) setAadharError(''); }}
+                      placeholder="6-digit OTP"
+                      placeholderTextColor="rgba(255,255,255,0.3)"
+                      keyboardType="numeric"
+                      maxLength={6}
+                      className="bg-[#110125] border border-white/5 text-white rounded-2xl px-4 h-12 text-xs font-semibold tracking-widest"
+                    />
+                    <View className="flex-row gap-2">
+                      <Pressable
+                        onPress={handleAadharVerifyOtp}
+                        disabled={isVerifyingAadhar}
+                        className="flex-1 bg-[#FCD34D] h-11 rounded-xl items-center justify-center"
+                      >
+                        {isVerifyingAadhar ? (
+                          <ActivityIndicator size="small" color="#1D1037" />
+                        ) : (
+                          <Text className="text-[#1D1037] text-xs font-black uppercase">Verify OTP</Text>
+                        )}
+                      </Pressable>
+                      <Pressable
+                        onPress={() => { setShowAadharOtpInput(false); setAadharOtp(''); setAadharError(''); }}
+                        className="px-4 h-11 rounded-xl items-center justify-center border border-white/10"
+                      >
+                        <Text className="text-white/50 text-xs font-bold">Resend</Text>
+                      </Pressable>
+                    </View>
+                  </View>
                 )}
               </View>
             </Animated.View>
@@ -1060,13 +1165,14 @@ const handleOpenHelp = () => {
             <Pressable
               onPress={handleBankSetupComplete}
               disabled={isVerifyingUpi || isVerifyingBank}
-              className="bg-primary-purple h-14 rounded-full items-center justify-center shadow-lg shadow-primary-purple/40 flex-row mt-4 space-x-2"
+         className="bg-primary-purple h-14 rounded-full items-center justify-center shadow-lg shadow-primary-purple/40 flex-row mt-4 gap-2"
             >
               {isVerifyingUpi || isVerifyingBank ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <>
-                  <Text className="text-white text-sm font-bold uppercase tracking-wider">Complete Setup 🚀</Text>
+                  <Text className="text-white text-sm font-bold uppercase tracking-wider">Complete Setup</Text>
+                  <Rocket size={16} color="#FFFFFF" />
                 </>
               )}
             </Pressable>

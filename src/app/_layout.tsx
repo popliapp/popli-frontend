@@ -156,7 +156,7 @@ if (!isProfileComplete) {
 }
       // 4b. Profile is complete
       if (inAuthGroup) {
-        const exemptRoutes = ['change-phone-otp', 'login', 'signup', 'otp', 'onboarding'];
+      const exemptRoutes = ['change-phone-otp', 'login', 'signup', 'otp', 'onboarding', 'legal'];
         if (exemptRoutes.includes(currentSegment)) return;
 
       if (onboardingScreens.includes(currentSegment)) {

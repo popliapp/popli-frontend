@@ -20,7 +20,8 @@ export default function AuthLayout() {
       <Stack.Screen name="interests" />
       <Stack.Screen name="location" />
       <Stack.Screen name="permissions" />
-      <Stack.Screen name="personalization-loader" />
+    <Stack.Screen name="personalization-loader" />
+      <Stack.Screen name="legal" options={{ animation: 'slide_from_bottom' }} />
     </Stack>
   );
 }

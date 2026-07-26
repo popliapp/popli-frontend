@@ -24,9 +24,7 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
-# Firebase
-google-services.json
-GoogleService-Info.plist
+
 
 # Local environment
 .env
@@ -66,3 +64,7 @@ temp/
 
 # IntelliJ / Android Studio
 .idea/
+
+google-services.json
+
+GoogleService-Info.plist

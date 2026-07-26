@@ -44,7 +44,6 @@ interface WalletState {
   ledgers: WalletLedgerItem[];
   withdrawalRequests: WithdrawalRequestItem[];
   transactions: TransactionItem[];
-  rechargeCoins: (amount: number, coins: number) => Promise<boolean>;
   sendGiftCoins: (receiverId: string, giftId: string, cost: number, message?: string, reelId?: string) => Promise<boolean>;
   withdrawEarnings: (amount: number, upiId: string) => Promise<boolean>;
   fetchWallet: () => Promise<void>;
@@ -68,45 +67,6 @@ export const useWalletStore = create<WalletState>()(
       ledgers: [],
       withdrawalRequests: [],
       transactions: [],
-rechargeCoins: async (amount, coins) => {
-        try {
-          console.warn("Using Sandbox Payment Gateway. Real integration (Razorpay/Stripe) is pending.");
-
-          // Optimistic update — instant UI
-          const optimisticTxn = {
-            id: 'optimistic_' + Date.now(),
-            type: 'COIN_RECHARGE',
-            amount: amount,
-            coinsCredited: coins,
-            status: 'success',
-            description: `Coin Recharge • ${coins} coins`,
-            createdAt: new Date().toISOString(),
-          } as unknown as TransactionItem;
-
-          set((state) => ({
-            coinBalance: state.coinBalance + coins,
-            transactions: [optimisticTxn, ...state.transactions],
-          }));
-
-          await apiClient.post('/wallet/recharge', {
-            amount: amount,
-            coins: coins,
-            paymentReference: 'SANDBOX_TXN_' + Date.now(),
-          });
-
-          // Background sync — real data replaces optimistic
-          get().fetchWallet();
-          return true;
-        } catch (e: any) {
-          console.error("Recharge API failed:", e?.message);
-          // Rollback on failure
-          set((state) => ({
-            coinBalance: state.coinBalance - coins,
-            transactions: state.transactions.filter(t => !(t.id as string).startsWith('optimistic_')),
-          }));
-          return false;
-        }
-      },
 
       sendGiftCoins: async (receiverId, giftId, cost, message, reelId) => {
         if (get().coinBalance >= cost) {

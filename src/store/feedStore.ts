@@ -338,19 +338,7 @@ export const useFeedStore = create<FeedState>()(
           console.log(`[FEED STORE] fetchReels API Request: cursor=${cursor}`);
           let res = await apiClient.get(`/reels/feed?limit=${limit}&category=${category}${cursorParam}&_t=${Date.now()}`);
           
-          const formatVideoUrl = (url: string) => {
-            if (!url) return '';
-            let finalUrl = url;
-            if (finalUrl.includes('res.cloudinary.com')) {
-              if (finalUrl.toLowerCase().endsWith('.mov')) {
-                finalUrl = finalUrl.replace(/\.mov$/i, '.mp4');
-              }
-              if (!finalUrl.includes('q_auto')) {
-                finalUrl = finalUrl.replace('/upload/', '/upload/q_auto,f_auto,w_720,c_limit/');
-              }
-            }
-            return finalUrl;
-          };
+     const formatVideoUrl = (url: string) => url || '';
 
           const fetchedReels = res.data.reels.map((r: any) => ({
             id: r.id,
@@ -415,19 +403,7 @@ export const useFeedStore = create<FeedState>()(
             res = await apiClient.get(`/reels/explore?page=${page}&limit=${limit}&category=${category}&excludeIds=${excludeIdsParam}&_t=${Date.now()}`);
           }
 
-          const formatVideoUrl = (url: string) => {
-            if (!url) return '';
-            let finalUrl = url;
-            if (finalUrl.includes('res.cloudinary.com')) {
-              if (finalUrl.toLowerCase().endsWith('.mov')) {
-                finalUrl = finalUrl.replace(/\.mov$/i, '.mp4');
-              }
-              if (!finalUrl.includes('q_auto')) {
-                finalUrl = finalUrl.replace('/upload/', '/upload/q_auto,f_auto,w_720,c_limit/');
-              }
-            }
-            return finalUrl;
-          };
+ const formatVideoUrl = (url: string) => url || '';
 
           const fetchedReels = res.data.map((r: any) => ({
             id: r.id,
@@ -476,19 +452,7 @@ export const useFeedStore = create<FeedState>()(
       fetchFollowingReels: async (page = 1, limit = 10) => {
         try {
           const res = await apiClient.get(`/reels/following?page=${page}&limit=${limit}&_t=${Date.now()}`);
-          const formatVideoUrl = (url: string) => {
-            if (!url) return '';
-            let finalUrl = url;
-            if (finalUrl.includes('res.cloudinary.com')) {
-              if (finalUrl.toLowerCase().endsWith('.mov')) {
-                finalUrl = finalUrl.replace(/\.mov$/i, '.mp4');
-              }
-              if (!finalUrl.includes('q_auto')) {
-                finalUrl = finalUrl.replace('/upload/', '/upload/q_auto,f_auto,w_720,c_limit/');
-              }
-            }
-            return finalUrl;
-          };
+       const formatVideoUrl = (url: string) => url || '';
 
           const fetchedReels = res.data.map((r: any) => ({
            id: r.id,
@@ -539,19 +503,7 @@ export const useFeedStore = create<FeedState>()(
       fetchLikedReels: async () => {
         try {
           const res = await apiClient.get('/reels/liked');
-          const formatVideoUrl = (url: string) => {
-            if (!url) return '';
-            let finalUrl = url;
-            if (finalUrl.includes('res.cloudinary.com')) {
-              if (finalUrl.toLowerCase().endsWith('.mov')) {
-                finalUrl = finalUrl.replace(/\.mov$/i, '.mp4');
-              }
-              if (!finalUrl.includes('q_auto')) {
-                finalUrl = finalUrl.replace('/upload/', '/upload/q_auto,f_auto,w_720,c_limit/');
-              }
-            }
-            return finalUrl;
-          };
+      const formatVideoUrl = (url: string) => url || '';
 
           const fetchedReels = res.data.map((r: any) => ({
             id: r.id,
@@ -585,19 +537,7 @@ export const useFeedStore = create<FeedState>()(
       fetchWatchHistory: async () => {
         try {
           const res = await apiClient.get('/reels/history');
-          const formatVideoUrl = (url: string) => {
-            if (!url) return '';
-            let finalUrl = url;
-            if (finalUrl.includes('res.cloudinary.com')) {
-              if (finalUrl.toLowerCase().endsWith('.mov')) {
-                finalUrl = finalUrl.replace(/\.mov$/i, '.mp4');
-              }
-              if (!finalUrl.includes('q_auto')) {
-                finalUrl = finalUrl.replace('/upload/', '/upload/q_auto,f_auto,w_720,c_limit/');
-              }
-            }
-            return finalUrl;
-          };
+ const formatVideoUrl = (url: string) => url || '';
 
           const fetchedReels = res.data.map((r: any) => ({
             id: r.id,
@@ -632,19 +572,7 @@ export const useFeedStore = create<FeedState>()(
         try {
           const res = await apiClient.get(`/reels/user/${userId}`);
           console.log(`[FEED STORE] fetchUserReels API Response: Profile query result count for user ${userId} is ${res.data.length}`);
-          const formatVideoUrl = (url: string) => {
-            if (!url) return '';
-            let finalUrl = url;
-            if (finalUrl.includes('res.cloudinary.com')) {
-              if (finalUrl.toLowerCase().endsWith('.mov')) {
-                finalUrl = finalUrl.replace(/\.mov$/i, '.mp4');
-              }
-              if (!finalUrl.includes('q_auto')) {
-                finalUrl = finalUrl.replace('/upload/', '/upload/q_auto,f_auto,w_720,c_limit/');
-              }
-            }
-            return finalUrl;
-          };
+   const formatVideoUrl = (url: string) => url || '';
 
        const fetchedReels = res.data.map((r: any) => ({
             id: r.id,

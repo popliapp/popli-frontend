@@ -21,11 +21,15 @@ export default function ReferralsScreen() {
       try {
         const [profileRes, configRes, referralsRes] = await Promise.all([
           apiClient.get('/users/me'),
-          apiClient.get('/system/configs?keys=REFERRAL_CREATOR_REWARD,REFERRAL_STANDARD_REWARD,REFERRAL_SUPER_REWARD'),
+          apiClient.get('/system/public-configs'),
           apiClient.get('/users/me/referrals')
         ]);
         setProfile(profileRes.data);
-        setConfigs(configRes.data);
+      setConfigs({
+          REFERRAL_CREATOR_REWARD: configRes.data?.referralCreatorReward ?? 50,
+          REFERRAL_STANDARD_REWARD: configRes.data?.referralStandardReward ?? 20,
+          REFERRAL_SUPER_REWARD: configRes.data?.referralSuperReward ?? 500,
+        });
         setReferrals(referralsRes.data || []);
       } catch (error) {
         console.error('Failed to fetch data', error);
