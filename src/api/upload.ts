@@ -1,7 +1,8 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { apiClient } from './client';
+import { apiClient, BASE_URL } from './client';
+import { useAuthStore } from '../store/authStore';
 
-export const uploadImageToR2 = async (
+export const uploadImageToCloudinary = async (
   fileUri: string,
   folder: string = 'general',
 ): Promise<string> => {
@@ -16,23 +17,31 @@ export const uploadImageToR2 = async (
   };
   const contentType = mimeMap[ext] || 'image/jpeg';
 
-  const presignRes = await apiClient.get('/upload/presign', {
-    params: { folder, filename, contentType },
-  });
+  const token = useAuthStore.getState().token;
 
-  const { uploadUrl, publicUrl } = presignRes.data;
+  const uploadRes = await FileSystem.uploadAsync(
+    `${BASE_URL}/upload/image?folder=${folder}`,
+    fileUri,
+    {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: 'file',
+      mimeType: contentType,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
 
-  const fileInfo = await FileSystem.getInfoAsync(fileUri);
-  if (!fileInfo.exists) throw new Error('File does not exist at URI: ' + fileUri);
-
-  const uploadRes = await FileSystem.uploadAsync(uploadUrl, fileUri, {
-    httpMethod: 'PUT',
-    headers: { 'Content-Type': contentType },
-  });
-
-  if (uploadRes.status !== 200) {
-    throw new Error(`R2 upload failed with status ${uploadRes.status}`);
+  if (uploadRes.status !== 200 && uploadRes.status !== 201) {
+    throw new Error(`Image upload failed with status ${uploadRes.status}`);
   }
 
-  return publicUrl;
+  const data = JSON.parse(uploadRes.body);
+
+  if (!data.url) {
+    throw new Error('Upload response missing url field');
+  }
+
+  return data.url;
 };

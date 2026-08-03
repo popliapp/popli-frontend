@@ -3,8 +3,7 @@ import { Platform } from 'react-native';
 
 import Constants from 'expo-constants';
 
-// Cloudflare fallback for remote testing if all else fails
-const CLOUDFLARE_FALLBACK = 'https://poplibackend.onrender.com';
+const BACKEND_FALLBACK = 'https://poplibackend.onrender.com';
 
 const resolveBaseUrl = () => {
   // 1. Primary: Use exactly what is configured in .env
@@ -26,8 +25,7 @@ const resolveBaseUrl = () => {
     }
   }
 
-  // 3. Ultimate Fallback
-  return CLOUDFLARE_FALLBACK.trim();
+return BACKEND_FALLBACK.trim();
 };
 
 let resolved = resolveBaseUrl();

@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TextInput, Pressable, Platform, Image, Modal, A
 import { useRouter } from 'expo-router';
 import { ArrowLeft, AtSign, Link as LinkIcon, UserPlus, Check, AlertCircle, Mail } from 'lucide-react-native';
 import { useAuthStore, useFeedStore } from '../store';
-import { uploadImageToR2 } from '../api/upload';
+import { uploadImageToCloudinary } from '../api/upload';
 import * as ImagePicker from 'expo-image-picker';
 import { getDefaultAvatar } from '../utils';
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -215,8 +215,8 @@ export default function EditProfileScreen() {
     let finalAvatarUrl = avatarUri;
     
     try {
-     if (avatarUri && avatarUri.startsWith('file://')) {
-        finalAvatarUrl = await uploadImageToR2(avatarUri, 'avatars');
+if (avatarUri && avatarUri.startsWith('file://')) {
+        finalAvatarUrl = await uploadImageToCloudinary(avatarUri, 'avatars');
       }
       const result = await updateProfile({
         name: fullName,
