@@ -306,27 +306,29 @@ export const useFeedStore = create<FeedState>()(
         }
       },
       setMoodFilter: (filter) => set({ moodFilter: filter }),
-      registerValidView: async (reelId, creatorUsername) => {
+registerValidView: async (reelId, creatorUsername) => {
         set((state) => {
-          // Track seen reel to prevent repetition (limit to 50 max)
           let newSeenIds = [...state.seenReelIds];
           if (!newSeenIds.includes(reelId)) {
             newSeenIds.push(reelId);
             if (newSeenIds.length > 50) newSeenIds.shift();
           }
 
+          const bumpViews = (arr: Reel[]) =>
+            arr.map(r => r.id === reelId ? { ...r, viewsCount: (r.viewsCount || 0) + 1 } : r);
+
           return {
-            reels: state.reels.map(r => 
-              r.id === reelId ? { ...r, viewsCount: (r.viewsCount || 0) + 1 } : r
-            ),
-            seenReelIds: newSeenIds
+            reels: bumpViews(state.reels),
+            homeFeedReels: bumpViews(state.homeFeedReels || []),
+            userReels: bumpViews(state.userReels),
+            seenReelIds: newSeenIds,
           };
         });
-        
-     try {
+
+        try {
           await apiClient.post(`/reels/${reelId}/view`, { watchDuration: 10000 });
         } catch (e) {
-          console.error("Failed to register view:", e);
+          console.error('Failed to register view:', e);
         }
       },
       fetchReels: async (cursor = null, limit = 10, category = 'all') => {

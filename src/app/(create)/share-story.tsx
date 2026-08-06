@@ -7,7 +7,7 @@ import { MotiView } from 'moti';
 import { CheckCircle } from 'lucide-react-native';
 import { apiClient } from '../../api/client';
 import * as FileSystem from 'expo-file-system/legacy';
-import { uploadImageToCloudinary } from '../../api/upload';
+import { uploadImageToR2 } from '../../api/upload';
 
 export default function ShareStoryScreen() {
   const router = useRouter();
@@ -187,7 +187,7 @@ export default function ShareStoryScreen() {
           } else {
             setStatusText('Uploading image...');
             const folder = mode === 'REEL' ? 'posts' : 'posts';
-           const finalUrl = await uploadImageToCloudinary(decodedUri, folder);
+          const finalUrl = await uploadImageToR2(decodedUri, folder);
             setUploadProgress(70);
             setStatusText('Saving post...');
 
@@ -246,7 +246,7 @@ export default function ShareStoryScreen() {
 
           if (!originalStoryId && decodedUri) {
             setStatusText('Uploading story...');
-           finalUrl = await uploadImageToCloudinary(decodedUri, 'stories');
+         finalUrl = await uploadImageToR2(decodedUri, 'stories');
             setUploadProgress(70);
           }
 

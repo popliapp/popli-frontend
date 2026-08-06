@@ -28,6 +28,7 @@ export interface GiftItem {
 
 export interface SystemConfig {
   viewRatePer1000: number;
+  minWatchDurationMs: number;
   minWithdrawalInr: number;
   giftCreatorSharePercent: number;
   giftCoinToInrRate: number;

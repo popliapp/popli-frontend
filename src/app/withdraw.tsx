@@ -14,8 +14,7 @@ export default function WithdrawScreen() {
   const { totalEarnings, pendingBalance, withdrawableBalance, ledgers, fetchWallet } = useWalletStore();
   const [loading, setLoading] = useState(true);
   
-  const [amount, setAmount] = useState('');
-  const [upiId, setUpiId] = useState('');
+ const [amount, setAmount] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
  const [activeTab, setActiveTab] = useState<'ALL' | 'VIEW' | 'GIFT'>('ALL');
 
@@ -53,23 +52,20 @@ const fetchConfigs = async () => {
   const pendingValidation = pendingBalance ?? 0;
   const withdrawable = withdrawableBalance ?? 0;
 
- const handleWithdrawSubmit = async () => {
+const handleWithdrawSubmit = async () => {
     setAmountError('');
-    setUpiError('');
 
-    let hasError = false;
     if (!amount) {
       setAmountError('Enter an amount to withdraw');
-      hasError = true;
+      return;
     }
-    if (!upiId) {
-      setUpiError('Enter your UPI ID');
-      hasError = true;
-    }
-    if (hasError) return;
 
     const amt = parseFloat(amount);
-if (amt < minWithdrawalInr!) {
+    if (isNaN(amt) || amt <= 0) {
+      setAmountError('Enter a valid amount');
+      return;
+    }
+    if (amt < minWithdrawalInr!) {
       setAmountError(`Minimum withdrawal is ₹${minWithdrawalInr}`);
       return;
     }
@@ -80,10 +76,9 @@ if (amt < minWithdrawalInr!) {
 
     try {
       setWithdrawing(true);
-     await apiClient.post('/wallet/withdraw', { amount: amt, upiId });
-      showSuccess('Withdrawal requested successfully');
+      await apiClient.post('/wallet/withdraw', { amount: amt });
+      showSuccess('Withdrawal request submitted. Admin will process it within 24 hours.');
       setAmount('');
-      setUpiId('');
       await fetchWallet();
     } catch (e: any) {
       const msg = e.response?.data?.message || 'Failed to withdraw';
@@ -231,21 +226,10 @@ if (configError || tdsPercent === null || feePercent === null || minWithdrawalIn
                 )}
               </View>
 
-              <View className="mb-6">
-                <Text className="text-gray-400 font-bold text-[10px] uppercase tracking-wider mb-2">Recipient UPI ID</Text>
-             <TextInput 
-                  value={upiId}
-                  onChangeText={(v) => { setUpiId(v); if (upiError) setUpiError(''); }}
-                  placeholder="username@bank"
-                  placeholderTextColor="rgba(255, 255, 255, 0.2)"
-                  className={`bg-[#12081E] border rounded-xl px-4 h-14 text-white font-medium ${upiError ? 'border-red-500' : 'border-[#3E2B5C]'}`}
-                />
-                {upiError ? (
-                  <View className="flex-row items-center gap-1.5 mt-2">
-                    <AlertCircle size={12} color="#EF4444" />
-                    <Text className="text-red-400 text-xs font-medium">{upiError}</Text>
-                  </View>
-                ) : null}
+ <View className="mb-6 bg-[#12081E] border border-[#3E2B5C] rounded-xl p-4">
+                <Text className="text-gray-400 font-bold text-[10px] uppercase tracking-wider mb-1">Payout Destination</Text>
+                <Text className="text-white text-sm font-medium">Your KYC-verified UPI or bank account</Text>
+                <Text className="text-gray-500 text-xs mt-1">Payment will be sent to the UPI ID or bank account verified during KYC.</Text>
               </View>
 
               <Pressable 

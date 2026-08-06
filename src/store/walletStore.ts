@@ -4,9 +4,7 @@ import { TransactionItem } from '../types';
 import { apiClient } from '../api/client';
 import { mmkvStoreStorage } from './storage';
 
-// ==========================================
-// WALLET & COINS STORE
-// ==========================================
+
 
 export interface WalletLedgerItem {
   id: string;
@@ -24,8 +22,12 @@ export interface WithdrawalRequestItem {
   amount: number;
   status: string;
   netPayable: number;
-  transactionId: string;
+  tdsDeducted: number;
+  platformFeeDeducted: number;
+  rejectionReason: string | null;
+  payoutId: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface WalletState {
@@ -89,23 +91,19 @@ export const useWalletStore = create<WalletState>()(
         }
         return false;
       },
-
-      withdrawEarnings: async (amount, upiId) => {
+withdrawEarnings: async (amount) => {
         if (get().withdrawableBalance >= amount) {
-          set((state) => ({ withdrawableBalance: state.withdrawableBalance - amount }));
           try {
-            await apiClient.post('/wallet/withdraw', { amount, upiId });
-            get().fetchWallet();
+            await apiClient.post('/wallet/withdraw', { amount });
+            await get().fetchWallet();
             return true;
           } catch (e) {
             console.error("Withdrawal failed:", e);
-            set((state) => ({ withdrawableBalance: state.withdrawableBalance + amount }));
             return false;
           }
         }
         return false;
       },
-
       fetchWallet: async () => {
         try {
           const res = await apiClient.get('/wallet');

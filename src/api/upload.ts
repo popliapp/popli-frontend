@@ -2,7 +2,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { apiClient, BASE_URL } from './client';
 import { useAuthStore } from '../store/authStore';
 
-export const uploadImageToCloudinary = async (
+export const uploadImageToR2 = async (
   fileUri: string,
   folder: string = 'general',
 ): Promise<string> => {

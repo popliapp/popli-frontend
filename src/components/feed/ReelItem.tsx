@@ -10,6 +10,7 @@ import { Reel } from '../../types';
 import { useFeedStore, useAuthStore, useWalletStore } from '../../store';
 import { formatSocialCount, formatRelativeTime, getDefaultAvatar } from '../../utils';
 import { useRouter } from 'expo-router';
+import { useSystemConfig } from '../../hooks/useSystemConfig';
 import { MotiView } from 'moti';
 import Svg, { Path, G } from 'react-native-svg';
 import AnimatedReanimated, { useSharedValue, useAnimatedStyle, withSequence, withTiming, withSpring, withDelay } from 'react-native-reanimated';
@@ -192,8 +193,10 @@ export const ReelItem = React.memo(({
   const [isHeldPaused, setIsHeldPaused] = useState(false);
   const [muteIndicator, setMuteIndicator] = useState<'muted' | 'unmuted' | null>(null);
   
-  const { toggleLikeReel, toggleSaveReel, registerValidView, deleteReel, isGlobalMuted, toggleGlobalMute } = useFeedStore();
+const { toggleLikeReel, toggleSaveReel, registerValidView, deleteReel, isGlobalMuted, toggleGlobalMute } = useFeedStore();
   const { followingIds, toggleFollow, userProfile } = useAuthStore();
+  const { config: systemConfig } = useSystemConfig();
+  const minWatchDurationMs = systemConfig?.minWatchDurationMs ?? 10000;
   
   const insets = useSafeAreaInsets();
   const baseBottomPadding = isStandalone ? Math.max(insets.bottom, 20) + 12 : TAB_BAR_HEIGHT + insets.bottom + 16;
@@ -237,15 +240,12 @@ export const ReelItem = React.memo(({
   useEffect(() => {
     let viewTimer: ReturnType<typeof setTimeout>;
     
-    // If the reel is active and we haven't registered a view yet
-    if (isActive && !hasRegisteredView) {
-      // Start a 10 second timer
+if (isActive && !hasRegisteredView) {
       viewTimer = setTimeout(() => {
         setHasRegisteredView(true);
         registerValidView(item.id, safeCreatorUsername);
-      }, 10000); // 10 seconds
+      }, minWatchDurationMs);
     }
-    
     return () => {
       if (viewTimer) clearTimeout(viewTimer);
     };

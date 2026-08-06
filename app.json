@@ -24,6 +24,12 @@
       "softwareKeyboardLayoutMode": "resize",
       "package": "com.mahak2004.popliapp",
       "googleServicesFile": "./google-services.json",
+    "notification": {
+        "icon": "./assets/images/note.png",
+        "color": "#A855F7",
+        "androidMode": "default",
+        "androidCollapsedTitle": "#{unread_notifications} new notifications"
+      },
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

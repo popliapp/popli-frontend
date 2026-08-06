@@ -7,7 +7,7 @@ import { useAuthStore } from '../../store';
 import { ChevronLeft, Camera, Globe } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { apiClient } from '../../api/client';
-import { uploadImageToCloudinary } from '../../api/upload';
+import { uploadImageToR2 } from '../../api/upload';
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -93,7 +93,7 @@ const pickImage = async () => {
       if (!result.canceled) {
         setIsUploading(true);
         const imageUri = result.assets[0].uri;
-     const uploadedUrl = await uploadImageToCloudinary(imageUri, 'profiles');
+   const uploadedUrl = await uploadImageToR2(imageUri, 'profiles');
         setAvatar(uploadedUrl);
       }
     } catch (error) {
