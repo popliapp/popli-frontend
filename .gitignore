@@ -64,7 +64,4 @@ temp/
 
 # IntelliJ / Android Studio
 .idea/
-
 google-services.json
-
-GoogleService-Info.plist

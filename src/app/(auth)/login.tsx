@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import * as Notifications from 'expo-notifications';
+
 
 GoogleSignin.configure({
   webClientId: '576573661357-huruthf92t81ohv6k1l2el6cm9q32ip5.apps.googleusercontent.com',
@@ -52,10 +52,7 @@ export default function LoginScreen() {
       if (!isComplete) {
         router.replace('/(auth)/personalization-loader');
       } else {
-        const { status } = await Notifications.getPermissionsAsync();
-        if (status !== 'granted') {
-          await Notifications.requestPermissionsAsync();
-        }
+     
         router.replace('/(tabs)/reels');
       }
     } catch (err: any) {

@@ -6,8 +6,9 @@ import { useWalletStore, useKYCStore } from '../store';
 import { formatEarnings } from '../utils/earnings';
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { SafeScreen } from '../components/layout/SafeScreen';
-import { showSuccess, showError, showInfo } from '../store/toastStore';
+import { showSuccess, showError } from '../store/toastStore';
 import { useSystemConfig } from '../hooks/useSystemConfig';
+import RechargeCoinsSheet from '../components/RechargeCoinsSheet';
 
 const { width } = Dimensions.get('window');
 
@@ -23,16 +24,16 @@ const TABS = [
 
 export default function WalletScreen() {
   const router = useRouter();
-  const { coinBalance, pendingBalance, withdrawableBalance, totalEarnings, totalWithdrawn, ledgers, withdrawalRequests, transactions, rechargeCoins, withdrawEarnings } = useWalletStore();
+const { coinBalance, pendingBalance, withdrawableBalance, totalEarnings, totalWithdrawn, ledgers, withdrawalRequests, transactions, withdrawEarnings } = useWalletStore();
   const { kycCompleted, upiId } = useKYCStore();
 
- const { coinPackages } = useSystemConfig();
+
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [customUpi, setCustomUpi] = useState(upiId || '');
   const [activeTab, setActiveTab] = useState('ALL');
-  const [amountError, setAmountError] = useState('');
+const [amountError, setAmountError] = useState('');
   const [upiError, setUpiError] = useState('');
-
+  const [showRecharge, setShowRecharge] = useState(false);
   useFocusEffect(
     useCallback(() => {
       useWalletStore.getState().fetchWallet();
@@ -174,9 +175,9 @@ export default function WalletScreen() {
               <Text className="text-accent-yellow font-black text-lg mt-0.5" numberOfLines={1}>{coinBalance.toLocaleString()}</Text>
             </View>
           </View>
-        <Pressable onPress={() => showInfo('Recharge coming soon!')} className="bg-white/10 px-4 py-2 rounded-xl">
-             <Text className="text-white font-bold text-xs">Buy Coins</Text>
-          </Pressable>
+     <Pressable onPress={() => setShowRecharge(true)} className="bg-white/10 px-4 py-2 rounded-xl">
+          <Text className="text-white font-bold text-xs">Buy Coins</Text>
+        </Pressable>
         </View>
 
         {/* Tabs and Ledgers */}
@@ -283,7 +284,13 @@ export default function WalletScreen() {
         </View>
 
       </ScrollView>
-      </KeyboardAvoidingView>
+</KeyboardAvoidingView>
+
+      <RechargeCoinsSheet
+        visible={showRecharge}
+        onClose={() => setShowRecharge(false)}
+        onSuccess={() => useWalletStore.getState().fetchWallet()}
+      />
     </SafeScreen>
   );
 }

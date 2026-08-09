@@ -23,13 +23,7 @@
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
       "package": "com.mahak2004.popliapp",
-      "googleServicesFile": "./google-services.json",
-    "notification": {
-        "icon": "./assets/images/note.png",
-        "color": "#A855F7",
-        "androidMode": "default",
-        "androidCollapsedTitle": "#{unread_notifications} new notifications"
-      },
+     "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -63,7 +57,7 @@
         }
       ]
     },
-    "web": {
+"web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
@@ -95,7 +89,14 @@
         }
       ],
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging",
+      [
+        "@react-native-firebase/messaging",
+        {
+          "android": {
+            "notificationIcon": "./assets/images/note.png"
+          }
+        }
+      ],
       "expo-video",
       "expo-audio",
       [
@@ -123,7 +124,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "5cb6a89e-146c-48b1-bb36-9dd8a80634ca"
+        "projectId": "2c5afdb0-a7d5-4847-91fd-93dedfbfdf93"
       }
     }
   }

@@ -12,7 +12,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as SecureStore from 'expo-secure-store';
 import { apiClient } from '../../api/client';
 import { sendFirebaseOTP, verifyFirebaseOTP } from '../../lib/firebase';
-import * as Notifications from 'expo-notifications';
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 export default function OTPScreen() {
@@ -131,10 +130,7 @@ export default function OTPScreen() {
 setIsSuccess(true);
 setLogin(true);
 setFirstLogin(false);
-const { status } = await Notifications.getPermissionsAsync();
-if (status !== 'granted') {
-  await Notifications.requestPermissionsAsync();
-}
+
 setTimeout(() => router.replace('/(tabs)/reels'), 50);
 return;
           }

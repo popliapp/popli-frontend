@@ -5,7 +5,7 @@ import { useAuthStore } from '../../store';
 import { ChevronLeft, Sparkles, Bell, Image, Camera, Mic } from 'lucide-react-native';
 import messaging, { AuthorizationStatus } from '@react-native-firebase/messaging';
 import * as MediaLibrary from 'expo-media-library';
-import * as Notifications from 'expo-notifications';
+
 import * as ImagePicker from 'expo-image-picker';
 import { Camera as ExpoCamera } from 'expo-camera';
 import { AudioModule } from 'expo-audio';
@@ -25,9 +25,9 @@ const [permissionsState, setPermissionsState] = useState({
 const requestOsPermission = async (key: 'notifications' | 'media' | 'camera' | 'mic'): Promise<boolean> => {
     try {
       switch (key) {
-   case 'notifications': {
-          const { status } = await Notifications.requestPermissionsAsync();
-          return status === 'granted';
+ case 'notifications': {
+          const status = await messaging().requestPermission();
+          return status === messaging.AuthorizationStatus.AUTHORIZED || status === messaging.AuthorizationStatus.PROVISIONAL;
         }
         case 'media': {
           const { status } = await MediaLibrary.requestPermissionsAsync();

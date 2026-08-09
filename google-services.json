@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "576573661357",
+    "project_id": "popli-48dcc",
+    "storage_bucket": "popli-48dcc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:576573661357:android:d34600463f433c2304e624",
+        "android_client_info": {
+          "package_name": "com.mahak2004.popliapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "576573661357-0keaksuaa1qg0andpo118fgf959loocp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mahak2004.popliapp",
+            "certificate_hash": "4201510cf601ce3122c45f7fd737df7fb0c01e59"
+          }
+        },
+        {
+          "client_id": "576573661357-1f7rvdin5a6d21j2iapafh0r72rkmde9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mahak2004.popliapp",
+            "certificate_hash": "d9e7e820de547282e592ebffc92929ace3be9380"
+          }
+        },
+        {
+          "client_id": "576573661357-huruthf92t81ohv6k1l2el6cm9q32ip5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwW_4ykuDzTAxkOyV4-NtdGau41XBI_G4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "576573661357-huruthf92t81ohv6k1l2el6cm9q32ip5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
