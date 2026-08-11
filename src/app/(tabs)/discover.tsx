@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Image, ScrollView, Pressable, Dimensions, Platform, ActivityIndicator, RefreshControl } from 'react-native';
-import { Search, QrCode, TrendingUp, Compass, Award, ShieldAlert, Sparkles, Zap, Users, Trophy, ChevronLeft } from 'lucide-react-native';
+import { Search, TrendingUp, Compass, Award, ShieldAlert, Sparkles, Zap, Users, Trophy, ChevronLeft } from 'lucide-react-native';
 import { showSuccess, showInfo } from '../../store/toastStore';
 import { useRouter } from 'expo-router';
 import { useFeedStore, useAuthStore } from '../../store';
@@ -89,9 +89,7 @@ const handleJoinChallenge = () => {
             placeholderTextColor="rgba(255, 255, 255, 0.4)"
             className="flex-1 text-white text-[13px] font-normal"
           />
-          <Pressable onPress={() => showInfo('QR Scanner coming soon')} className="p-1 active:opacity-70">
-              <QrCode size={18} color="rgba(255, 255, 255, 0.5)" />
-            </Pressable>
+       
           </View>
         </View>
       </View>
@@ -105,9 +103,7 @@ const handleJoinChallenge = () => {
         }
       >
         {searchQuery.trim().length > 0 ? (
-          /* ==================================
-             SEARCH RESULTS VIEW
-             ================================== */
+      
           <View className="px-4 gap-6">
             {isSearching ? (
               <View className="items-center py-10">

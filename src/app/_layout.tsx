@@ -22,6 +22,8 @@ import { useFonts } from 'expo-font';
 import { useAuthStore, useKYCStore } from '../store';
 import { useFCM } from '../hooks/useFCM';
 import { ToastHost } from '../components/Toast';
+import ReelUploadBanner from '../components/ReelUploadBanner';
+import StoryUploadBanner from '../components/StoryUploadBanner';
 import { getMessaging, setBackgroundMessageHandler } from '@react-native-firebase/messaging';
 import axios from 'axios';
 import { BASE_URL } from '../api/client';
@@ -208,6 +210,8 @@ function RootLayout() {
               <Stack.Screen name="settings" />
               <Stack.Screen name="support" />
             </Stack>
+           <ReelUploadBanner />
+            <StoryUploadBanner />
             <ToastHost />
           </SafeAreaView>
         </SafeAreaProvider>

@@ -221,15 +221,12 @@ const filteredReels = getFilteredReels();
     }
   }, [startReelId, filteredReels.length]);
 
- useEffect(() => {
-    if (filteredReels.length > 0) {
-      if (!activeReelId || !filteredReels.find(r => r.id === activeReelId)) {
-         setTimeout(() => setActiveReelId(filteredReels[0].id), 0);
-      }
+useEffect(() => {
+    if (filteredReels.length > 0 && !activeReelId) {
+      setTimeout(() => setActiveReelId(filteredReels[0].id), 0);
     }
-  }, [filteredReels.length, activeReelId]);
-
-  // When activeTab changes, force scroll to top and play the first reel of the new tab
+  }, [filteredReels.length]);
+  
   useEffect(() => {
     if (filteredReels.length > 0) {
       flashListRef.current?.scrollToOffset({ offset: 0, animated: false });

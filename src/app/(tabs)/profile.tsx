@@ -281,10 +281,11 @@ const hasStory = stories.some(s => s.creatorId === userProfile.id || s.creatorId
           </View>
         ) : (
           <View className="flex-row flex-wrap">
-            {activeGridData.map((item) => (
+{activeGridData.filter(item => typeof item.id === 'string' && item.id.length > 0).map((item) => (
               <Pressable
                 key={item.id}
                 onPress={() => {
+                  if (!item.id) return;
                   if (activeTab === 'posts') {
                     router.push({
                       pathname: `/post/${item.id}` as any,
@@ -324,16 +325,17 @@ const hasStory = stories.some(s => s.creatorId === userProfile.id || s.creatorId
                 )}
 
            
-                {activeTab !== 'posts' && (
-                  <Pressable 
-                    onPress={(e) => {
+    {activeTab !== 'posts' && (
+                  <View
+                    className="absolute top-2 left-2 bg-black/70 w-6 h-6 rounded flex items-center justify-center border border-white/10"
+                    onStartShouldSetResponder={() => true}
+                    onTouchEnd={(e) => {
                       e.stopPropagation();
                       router.push(`/(creator)/reel-analytics/${item.id}` as any);
                     }}
-                    className="absolute top-2 left-2 bg-black/70 w-6 h-6 rounded flex items-center justify-center border border-white/10"
                   >
                     <BarChart2 size={12} color="#A855F7" />
-                  </Pressable>
+                  </View>
                 )}
               </Pressable>
             ))}

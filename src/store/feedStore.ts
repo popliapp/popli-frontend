@@ -212,10 +212,10 @@ export const useFeedStore = create<FeedState>()(
           });
         }
       },
-      addLocalReel: (reel) =>
+  addLocalReel: (reel) =>
         set((state) => ({
-          reels: [reel, ...state.reels],
-          userReels: [reel, ...state.userReels]
+          reels: state.reels.some(r => r.id === reel.id) ? state.reels : [reel, ...state.reels],
+          userReels: state.userReels.some(r => r.id === reel.id) ? state.userReels : [reel, ...state.userReels],
         })),
       addComment: async (comment) => {
         const lockKey = `${comment.reelId}-${comment.text}`;
@@ -570,13 +570,21 @@ registerValidView: async (reelId, creatorUsername) => {
           console.error("Error fetching watch history:", error);
         }
       },
-      fetchUserReels: async (userId: string) => {
+   fetchUserReels: async (userId: string) => {
         try {
           const res = await apiClient.get(`/reels/user/${userId}`);
           console.log(`[FEED STORE] fetchUserReels API Response: Profile query result count for user ${userId} is ${res.data.length}`);
-   const formatVideoUrl = (url: string) => url || '';
+          const formatVideoUrl = (url: string) => url || '';
+          const existingReels = get().userReels;
 
-       const fetchedReels = res.data.map((r: any) => ({
+          const fetchedReels = res.data.map((r: any) => {
+            const existing = existingReels.find((e) => e.id === r.id);
+            const backendThumb = r.thumbnailUrl || formatVideoUrl(r.mediaUrl);
+            const isCfThumb = backendThumb.includes('cloudflarestream.com');
+            const resolvedThumb = (isCfThumb && existing?.thumbnailUrl && !existing.thumbnailUrl.includes('cloudflarestream.com'))
+              ? existing.thumbnailUrl
+              : backendThumb;
+            return {
             id: r.id,
             creatorId: r.creatorId,
             mediaType: r.mediaType,
@@ -585,7 +593,7 @@ registerValidView: async (reelId, creatorUsername) => {
             creatorAvatar: r.creator?.avatar || getDefaultAvatar(r.creator?.username || 'user'),
             creatorIsVerified: r.creator?.isVerified || false,
             videoUrl: formatVideoUrl(r.mediaUrl),
-            thumbnailUrl: r.thumbnailUrl || formatVideoUrl(r.mediaUrl), 
+            thumbnailUrl: resolvedThumb,
             description: r.description || '',
             musicName: r.musicName || 'Original Audio',
             likesCount: r.likesCount || 0,
@@ -600,8 +608,9 @@ registerValidView: async (reelId, creatorUsername) => {
             isMonetized: r.isMonetized !== undefined ? r.isMonetized : true,
             layersData: r.layersData,
             createdAt: r.createdAt,
-            location: r.location || (r.city ? { city: r.city, latitude: r.latitude, longitude: r.longitude } : null)
-          }));
+   location: r.location || (r.city ? { city: r.city, latitude: r.latitude, longitude: r.longitude } : null)
+            };
+          });
 
           set({ userReels: fetchedReels });
         } catch (error) {
@@ -660,9 +669,20 @@ registerValidView: async (reelId, creatorUsername) => {
       partialize: (state) => Object.fromEntries(
         Object.entries(state).filter(([key]) => !['userReels', 'isFetchingFeed'].includes(key))
       ) as any,
-      onRehydrateStorage: () => (state) => {
+  onRehydrateStorage: () => (state) => {
         if (state) {
           state.isFetchingFeed = false;
+          state.userReels = [];
+          if (Array.isArray(state.reels)) {
+            state.reels = state.reels.filter(
+              (r) => r && typeof r.id === 'string' && r.id.length > 0
+            );
+          }
+          if (Array.isArray(state.homeFeedReels)) {
+            state.homeFeedReels = state.homeFeedReels.filter(
+              (r) => r && typeof r.id === 'string' && r.id.length > 0
+            );
+          }
         }
       }
     }

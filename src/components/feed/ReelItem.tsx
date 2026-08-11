@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, Pressable, Dimensions, StyleSheet, Animated, Platform, Share, Modal } from 'react-native';
-import { showError } from '../../store/toastStore';
+import { View, Text, Pressable, Dimensions, StyleSheet, Animated, Platform, Share, Modal ,ActivityIndicator} from 'react-native';
+import { showError, showSuccess } from '../../store/toastStore';
 import { Image as ExpoImage } from 'expo-image';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useAudioPlayer } from 'expo-audio';
@@ -188,7 +188,8 @@ export const ReelItem = React.memo(({
   isAdjacent = true
 }: ReelItemProps) => {
   const router = useRouter();
-  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isHeldPaused, setIsHeldPaused] = useState(false);
   const [muteIndicator, setMuteIndicator] = useState<'muted' | 'unmuted' | null>(null);
@@ -780,19 +781,29 @@ const handleTap = useCallback(() => {}, []);
               >
                 <Text className="text-white font-semibold text-base">Cancel</Text>
               </Pressable>
-              <Pressable 
+          <Pressable 
                 onPress={async () => {
+                  if (isDeleting) return;
                   try {
+                    setIsDeleting(true);
                     await deleteReel(item.id);
                     setIsDeleteModalVisible(false);
-               } catch (error) {
+                    showSuccess('Reel deleted');
+                  } catch (error) {
                     showError('Failed to delete reel');
                     setIsDeleteModalVisible(false);
+                  } finally {
+                    setIsDeleting(false);
                   }
                 }}
                 className="flex-1 py-3.5 rounded-2xl bg-red-500 items-center shadow-lg shadow-red-500/30 active:bg-red-600"
+                disabled={isDeleting}
               >
-                <Text className="text-white font-bold text-base">Delete</Text>
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text className="text-white font-bold text-base">Delete</Text>
+                )}
               </Pressable>
             </View>
           </View>
