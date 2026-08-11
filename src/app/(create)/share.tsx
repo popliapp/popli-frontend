@@ -15,7 +15,7 @@ export default function ShareScreen() {
   const insets = useSafeAreaInsets();
   
   const [caption, setCaption] = useState('');
-  const [hashtagInput, setHashtagInput] = useState('');
+  const [hashtagInput, setHashtagInput] = useState(''); 
 
   // Location & Tags
   const [location, setLocation] = useState<{ locationName: string; latitude?: number; longitude?: number; placeId?: string } | null>(null);
@@ -49,10 +49,10 @@ export default function ShareScreen() {
     }
 
   
-    router.push({
+ router.push({
       pathname: '/(create)/share-story',
       params: {
-        uri: params.uri,
+    uri: params.uri,
         type: params.type || 'video',
         mode: params.mode || 'REEL',
         text: caption,

@@ -65,3 +65,6 @@ temp/
 # IntelliJ / Android Studio
 .idea/
 google-services.json
+
+
+sentry.properties

@@ -8,18 +8,19 @@ import { CheckCircle } from 'lucide-react-native';
 import { apiClient, BASE_URL } from '../../api/client';
 import * as FileSystem from 'expo-file-system/legacy';
 import { uploadImageToR2 } from '../../api/upload';
+import * as VideoThumbnails from 'expo-video-thumbnails';
 
 export default function ShareStoryScreen() {
   const router = useRouter();
   const {
-    uri, type, text, target, mode, speed, effect, musicId, musicTitle,
+uri, type, text, target, mode, speed, effect, musicId, musicTitle,
     musicArtist, musicUrl, targetUserIds, originalStoryId, originalOwnerId,
     originalOwnerUsername, isStory, city, taggedUserIds, isMonetized,
     returnTo, challengeId, isVideoMuted, category, allowGifting,
     visibility, allowComments, allowDuet, location,
   } = useLocalSearchParams<{
     uri: string;
-    type: 'photo' | 'video';
+  type: 'photo' | 'video';
     text?: string;
     target?: string;
     mode?: string;
@@ -85,7 +86,17 @@ const [status, setStatus] = React.useState<'uploading' | 'success' | 'error'>('u
 
         if ((mode === 'REEL' || mode === 'POST') && isStory !== 'true') {
   if (type === 'video') {
-        setStatusText('Uploading video...');
+ let customThumbnailUrl: string | undefined;
+            try {
+              setStatusText('Generating thumbnail...');
+              const { uri: thumbUri } = await VideoThumbnails.getThumbnailAsync(decodedUri, { time: 1000 });
+              setStatusText('Uploading thumbnail...');
+              customThumbnailUrl = await uploadImageToR2(thumbUri, 'thumbnails');
+         } catch (thumbErr: any) {
+              console.log('Thumbnail generation failed:', thumbErr?.message || thumbErr);
+              customThumbnailUrl = undefined;
+            }
+            setStatusText('Uploading video...');
 
             const { token } = useAuthStore.getState();
             const uploadRes = await FileSystem.uploadAsync(
@@ -137,9 +148,9 @@ const [status, setStatus] = React.useState<'uploading' | 'success' | 'error'>('u
 
       const playbackUrl = assetData.mediaUrl;
 
-         const res = await apiClient.post('/reels', {
+      const res = await apiClient.post('/reels', {
               mediaUrl: playbackUrl,
-              thumbnailUrl: assetData.thumbnailUrl || playbackUrl,
+              thumbnailUrl: customThumbnailUrl || assetData.thumbnailUrl || playbackUrl,
             mediaType: 'VIDEO' as const,
               description: text || '',
               category: category || 'comedy',
@@ -170,7 +181,7 @@ const [status, setStatus] = React.useState<'uploading' | 'success' | 'error'>('u
               creatorAvatar: userProfile.avatar || 'https://ui-avatars.com/api/?name=U&background=1D1037&color=fff&size=200',
               creatorIsVerified: userProfile.isVerified || false,
               videoUrl: playbackUrl,
-             thumbnailUrl: assetData.thumbnailUrl || playbackUrl,
+         thumbnailUrl: customThumbnailUrl || assetData.thumbnailUrl || playbackUrl,
               mediaType: 'VIDEO' as const,
               description: backendReel.description || '',
               musicName: backendReel.musicName || 'Original Audio',

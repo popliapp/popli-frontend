@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
-
 import Constants from 'expo-constants';
+import * as Sentry from '@sentry/react-native';
 
 const BACKEND_FALLBACK = 'https://poplibackend.onrender.com';
 
@@ -61,12 +61,14 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    if (__DEV__) {
+if (__DEV__) {
       console.error(`[API REQUEST ERROR]`, error);
     }
     return Promise.reject(error);
   }
 );
+
+const EXPECTED_API_STATUSES = new Set([400, 401, 403, 404, 409, 422, 429]);
 
 // Response interceptor to handle token refresh automatically and log responses
 apiClient.interceptors.response.use(
@@ -86,11 +88,24 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
     
-    if (__DEV__) {
-      // Don't spam the terminal with 401 Unauthorized errors since we handle them gracefully
+if (__DEV__) {
       if (error.response?.status !== 401) {
         console.warn(`[API ERROR] ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - Status: ${error.response?.status || 'NETWORK_ERROR'}`);
       }
+    }
+
+    const status = error.response?.status;
+    if (!axios.isCancel(error) && (!status || !EXPECTED_API_STATUSES.has(status))) {
+      Sentry.captureException(error, {
+        tags: {
+          component: 'api-client',
+          http_status: status ?? 'network_error',
+          method: originalRequest?.method?.toUpperCase(),
+        },
+        extra: {
+          url: originalRequest?.url,
+        },
+      });
     }
     
  if (error.response?.status === 401 && !originalRequest._retry) {

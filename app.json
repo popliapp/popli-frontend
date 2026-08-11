@@ -114,9 +114,24 @@
       "expo-sharing",
       "expo-localization",
       "expo-web-browser",
-      "@sentry/react-native",
+     [
+  "@sentry/react-native",
+  {
+    "organization": "popli",
+    "project": "react-native"
+  }
+],
       "@react-native-firebase/analytics"
     ],
+"updates": {
+      "url": "https://u.expo.dev/2c5afdb0-a7d5-4847-91fd-93dedfbfdf93",
+      "fallbackToCacheTimeout": 0,
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": false

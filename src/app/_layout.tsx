@@ -1,4 +1,14 @@
 /* eslint-disable */
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  environment: __DEV__ ? 'development' : 'production',
+  enabled: !__DEV__ && !!process.env.EXPO_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0,
+  sendDefaultPii: false,
+});
+
 import React, { useEffect } from 'react';
 import { Stack, router, useSegments, useRootNavigationState } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -17,10 +27,8 @@ import axios from 'axios';
 import { BASE_URL } from '../api/client';
 import '../global.css';
 
-// Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-// Register background handler safely
 try {
   if (Platform.OS !== 'web') {
     setBackgroundMessageHandler(getMessaging(), async remoteMessage => {
@@ -31,24 +39,21 @@ try {
   console.warn('Firebase is not fully initialized. If you are in Expo Go or Web, this is expected.', e);
 }
 
-// Disable strict mode to suppress internal library warnings (e.g. from react-native-css-interop)
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
   strict: false,
 });
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded] = useFonts({
     'DancingScript': require('../../assets/fonts/DancingScript-Bold.ttf'),
   });
- const { isLoggedIn, isOnboarded, userProfile, onboardingStep } = useAuthStore();
+  const { isLoggedIn, isOnboarded, userProfile, onboardingStep } = useAuthStore();
   const segments = useSegments();
   const rootNavigationState = useRootNavigationState();
 
-  // Initialize FCM
   useFCM();
 
-  // Verify API Connection on Startup
   useEffect(() => {
     const verifyApiConnection = async () => {
       console.log(`[STARTUP] Verifying API Connection to: ${BASE_URL}`);
@@ -64,7 +69,7 @@ export default function RootLayout() {
     verifyApiConnection();
   }, []);
 
-const [isRestoringSession, setIsRestoringSession] = React.useState(true);
+  const [isRestoringSession, setIsRestoringSession] = React.useState(true);
 
   useEffect(() => {
     const fallbackTimer = setTimeout(() => {
@@ -95,7 +100,6 @@ const [isRestoringSession, setIsRestoringSession] = React.useState(true);
     validateSession();
   }, []);
 
- // Root Navigation Guard
   useEffect(() => {
     if (!rootNavigationState?.key) return;
 
@@ -104,10 +108,8 @@ const [isRestoringSession, setIsRestoringSession] = React.useState(true);
     const inAuthGroup = rootSegment === '(auth)';
     const inSplash = !rootSegment || rootSegment === 'index';
 
-    // 1. Let splash/index handle itself
     if (inSplash) return;
 
-    // 2. Not onboarded yet → force to onboarding screen
     if (!isOnboarded) {
       if (rootSegment !== '(auth)' || currentSegment !== 'onboarding') {
         setTimeout(() => router.replace('/(auth)/onboarding'), 0);
@@ -115,7 +117,6 @@ const [isRestoringSession, setIsRestoringSession] = React.useState(true);
       return;
     }
 
-    // 3. Onboarded but not logged in → force to login
     if (isOnboarded && !isLoggedIn) {
       if (!inAuthGroup) {
         setTimeout(() => router.replace('/(auth)/login'), 0);
@@ -123,7 +124,6 @@ const [isRestoringSession, setIsRestoringSession] = React.useState(true);
       return;
     }
 
-// 4. Logged in user
     if (isLoggedIn) {
       const isProfileComplete = useAuthStore.getState().userProfile?.isProfileComplete;
       const onboardingStep = useAuthStore.getState().onboardingStep;
@@ -131,54 +131,49 @@ const [isRestoringSession, setIsRestoringSession] = React.useState(true);
       const onboardingScreens = ['interests', 'location', 'permissions', 'personalization-loader', 'profile-setup'];
       const isOnOnboardingScreen = inAuthGroup && onboardingScreens.includes(currentSegment);
 
-      // 4a. Profile not complete → only intervene if user escaped onboarding entirely
-      // (e.g. deep-linked into tabs, or app restarted mid-onboarding)
-      // DO NOT touch navigation if user is already on any onboarding screen.
-      // The screens themselves own navigation within the onboarding flow.
-if (!isProfileComplete) {
-  if (!isOnOnboardingScreen) {
-    const isExemptFromOnboarding = 
-      rootSegment === 'edit-profile' ||
-      rootSegment === 'settings' ||
-      rootSegment === 'kyc' ||
-      rootSegment === 'wallet' ||
-      rootSegment === 'notifications' ||
-      rootSegment === 'support';
+      if (!isProfileComplete) {
+        if (!isOnOnboardingScreen) {
+          const isExemptFromOnboarding =
+            rootSegment === 'edit-profile' ||
+            rootSegment === 'settings' ||
+            rootSegment === 'kyc' ||
+            rootSegment === 'wallet' ||
+            rootSegment === 'notifications' ||
+            rootSegment === 'support';
 
-    if (!isExemptFromOnboarding) {
-      const safeStep = (onboardingStep && onboardingStep !== 'done')
-        ? onboardingStep
-        : 'interests';
-      setTimeout(() => router.replace(`/(auth)/${safeStep}` as any), 0);
-    }
-  }
-  return;
-}
-      // 4b. Profile is complete
+          if (!isExemptFromOnboarding) {
+            const safeStep = (onboardingStep && onboardingStep !== 'done')
+              ? onboardingStep
+              : 'interests';
+            setTimeout(() => router.replace(`/(auth)/${safeStep}` as any), 0);
+          }
+        }
+        return;
+      }
+
       if (inAuthGroup) {
-      const exemptRoutes = ['change-phone-otp', 'login', 'signup', 'otp', 'onboarding', 'legal'];
+        const exemptRoutes = ['change-phone-otp', 'login', 'signup', 'otp', 'onboarding', 'legal'];
         if (exemptRoutes.includes(currentSegment)) return;
 
-      if (onboardingScreens.includes(currentSegment)) {
-  // Fully onboarded user somehow on onboarding screen → send to reels
-  setTimeout(() => router.replace('/(tabs)/reels'), 0);
-} else {
-  if (useAuthStore.getState().isFirstLogin) {
-    useAuthStore.getState().setFirstLogin(false);
-    setTimeout(() => router.replace('/kyc'), 0);
-  } else {
-    setTimeout(() => router.replace('/(tabs)/reels'), 0);
-  }
-}
+        if (onboardingScreens.includes(currentSegment)) {
+          setTimeout(() => router.replace('/(tabs)/reels'), 0);
+        } else {
+          if (useAuthStore.getState().isFirstLogin) {
+            useAuthStore.getState().setFirstLogin(false);
+            setTimeout(() => router.replace('/kyc'), 0);
+          } else {
+            setTimeout(() => router.replace('/(tabs)/reels'), 0);
+          }
+        }
       }
     }
   }, [isLoggedIn, isOnboarded, segments, rootNavigationState?.key]);
-  // Handle Splash Screen Removal
+
   useEffect(() => {
     if (rootNavigationState?.key) {
       setTimeout(() => {
         SplashScreen.hideAsync().catch(() => {});
-      }, 500); 
+      }, 500);
     }
   }, [rootNavigationState?.key]);
 
@@ -194,32 +189,31 @@ if (!isProfileComplete) {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
         <SafeAreaProvider>
-       <SafeAreaView style={{ flex: 1, backgroundColor: '#0B001A' }} edges={['left', 'right']}>
+          <SafeAreaView style={{ flex: 1, backgroundColor: '#0B001A' }} edges={['left', 'right']}>
             <StatusBar style="light" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: '#0B001A' },
-              animation: 'fade',
-            }}
-          >
-            {/* Main Route Groups */}
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-            
-            {/* Main stack sub-pages */}
-            <Stack.Screen name="kyc" />
-            <Stack.Screen name="chat/[id]" />
-            <Stack.Screen name="wallet" />
-            <Stack.Screen name="notifications" />
-            <Stack.Screen name="settings" />
-           <Stack.Screen name="support" />
-          </Stack>
-          <ToastHost />
-        </SafeAreaView>
-      </SafeAreaProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: '#0B001A' },
+                animation: 'fade',
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="kyc" />
+              <Stack.Screen name="chat/[id]" />
+              <Stack.Screen name="wallet" />
+              <Stack.Screen name="notifications" />
+              <Stack.Screen name="settings" />
+              <Stack.Screen name="support" />
+            </Stack>
+            <ToastHost />
+          </SafeAreaView>
+        </SafeAreaProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }
+
+export default Sentry.wrap(RootLayout);

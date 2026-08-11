@@ -15,10 +15,10 @@
     "@shopify/flash-list": "^2.0.2",
     "axios": "^1.17.0",
     "dayjs": "^1.11.21",
-    "expo": "~56.0.18",
+    "expo": "~56.0.19",
     "expo-asset": "~56.0.16",
     "expo-audio": "~56.0.13",
-    "expo-build-properties": "~56.0.24",
+    "expo-build-properties": "~56.0.25",
     "expo-camera": "~56.0.8",
     "expo-clipboard": "~56.0.4",
     "expo-constants": "~56.0.17",
@@ -30,21 +30,22 @@
     "expo-glass-effect": "~56.0.4",
     "expo-haptics": "~56.0.3",
     "expo-image": "~56.0.11",
-    "expo-image-picker": "~56.0.22",
+    "expo-image-picker": "~56.0.23",
     "expo-keep-awake": "~56.0.3",
     "expo-linear-gradient": "~56.0.4",
     "expo-linking": "~56.0.16",
     "expo-localization": "~56.0.6",
-    "expo-location": "~56.0.22",
+    "expo-location": "~56.0.23",
     "expo-media-library": "~56.0.10",
     "expo-print": "~56.0.4",
-    "expo-router": "~56.2.17",
+    "expo-router": "~56.2.18",
     "expo-secure-store": "~56.0.4",
-    "expo-sharing": "~56.0.23",
+    "expo-sharing": "~56.0.24",
     "expo-splash-screen": "~56.0.14",
     "expo-status-bar": "~56.0.4",
-    "expo-symbols": "~56.0.6",
+    "expo-symbols": "~56.0.7",
     "expo-system-ui": "~56.0.5",
+    "expo-updates": "~56.0.24",
     "expo-video": "~56.1.4",
     "expo-video-thumbnails": "~56.0.3",
     "expo-web-browser": "~56.0.6",
@@ -64,6 +65,7 @@
     "react-native-logs": "^5.6.0",
     "react-native-mmkv": "^4.3.1",
     "react-native-nitro-modules": "^0.35.9",
+    "react-native-razorpay": "^3.0.0",
     "react-native-reanimated": "4.3.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
@@ -99,7 +101,8 @@
     "doctor": {
       "reactNativeDirectoryCheck": {
         "exclude": [
-          "expo-modules-jsi"
+          "expo-modules-jsi",
+          "react-native-razorpay"
         ]
       }
     }
