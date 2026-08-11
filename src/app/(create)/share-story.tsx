@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useStoryStore, useAuthStore, useFeedStore, useEditorStore, useChatStore } from '../../store';
 import { MotiView } from 'moti';
 import { CheckCircle } from 'lucide-react-native';
-import { apiClient } from '../../api/client';
+import { apiClient, BASE_URL } from '../../api/client';
 import * as FileSystem from 'expo-file-system/legacy';
 import { uploadImageToR2 } from '../../api/upload';
 
@@ -53,7 +53,7 @@ export default function ShareStoryScreen() {
   const { userProfile } = useAuthStore();
   const { layers, timelineData, musicData } = useEditorStore();
   const { sendDirectMessage } = useChatStore();
-  const [status, setStatus] = React.useState<'uploading' | 'success' | 'error'>('uploading');
+const [status, setStatus] = React.useState<'uploading' | 'success' | 'error'>('uploading');
   const [uploadProgress, setUploadProgress] = React.useState<number>(0);
   const [statusText, setStatusText] = React.useState<string>('Preparing...');
 
@@ -84,30 +84,37 @@ export default function ShareStoryScreen() {
         const metadata = { layers, timeline: timelineData, music: musicData };
 
         if ((mode === 'REEL' || mode === 'POST') && isStory !== 'true') {
-          if (type === 'video') {
-            setStatusText('Creating upload...');
+  if (type === 'video') {
+        setStatusText('Uploading video...');
 
-            const uploadUrlRes = await apiClient.post('/video/upload-url');
-            const { uploadId, uploadUrl } = uploadUrlRes.data;
-
-            setStatusText('Uploading video...');
-
-            const uploadRes = await FileSystem.uploadAsync(uploadUrl, decodedUri, {
-              httpMethod: 'PUT',
-              headers: { 'Content-Type': 'video/mp4' },
-              uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-            });
+            const { token } = useAuthStore.getState();
+            const uploadRes = await FileSystem.uploadAsync(
+              `${BASE_URL}/video/upload`,
+              decodedUri,
+              {
+                httpMethod: 'POST',
+                uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+                fieldName: 'file',
+                mimeType: 'video/mp4',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            );
 
             if (uploadRes.status < 200 || uploadRes.status >= 300) {
-              throw new Error(`Video upload failed: ${uploadRes.status}`);
+              throw new Error(`Video upload failed: ${uploadRes.status} — ${uploadRes.body}`);
             }
 
-            setUploadProgress(50);
+            const uploadData = JSON.parse(uploadRes.body);
+            const uploadId = uploadData.uploadId;
+
+            setUploadProgress(60);
             setStatusText('Processing video...');
 
             let assetData: any = null;
             let attempts = 0;
-            const maxAttempts = 30;
+            const maxAttempts = 40;
 
             while (attempts < maxAttempts) {
               await new Promise((r) => setTimeout(r, 4000));
@@ -119,9 +126,8 @@ export default function ShareStoryScreen() {
                   break;
                 }
               } catch {
-                // still processing, continue polling
               }
-              setUploadProgress(50 + Math.min(attempts * 1.5, 45));
+              setUploadProgress(60 + Math.min(attempts * 1.5, 35));
             }
 
             if (!assetData) throw new Error('Video processing timed out. Please try again.');
@@ -129,11 +135,11 @@ export default function ShareStoryScreen() {
             setUploadProgress(98);
             setStatusText('Saving reel...');
 
-            const playbackUrl = `https://stream.mux.com/${assetData.playbackId}.m3u8`;
+      const playbackUrl = assetData.mediaUrl;
 
-            const res = await apiClient.post('/reels', {
+         const res = await apiClient.post('/reels', {
               mediaUrl: playbackUrl,
-              thumbnailUrl: assetData.thumbnailUrl,
+              thumbnailUrl: assetData.thumbnailUrl || playbackUrl,
             mediaType: 'VIDEO' as const,
               description: text || '',
               category: category || 'comedy',
@@ -189,6 +195,7 @@ export default function ShareStoryScreen() {
             const folder = mode === 'REEL' ? 'posts' : 'posts';
           const finalUrl = await uploadImageToR2(decodedUri, folder);
             setUploadProgress(70);
+         setUploadProgress(70);
             setStatusText('Saving post...');
 
             const res = await apiClient.post('/reels', {
@@ -247,7 +254,8 @@ export default function ShareStoryScreen() {
           if (!originalStoryId && decodedUri) {
             setStatusText('Uploading story...');
          finalUrl = await uploadImageToR2(decodedUri, 'stories');
-            setUploadProgress(70);
+           
+       setUploadProgress(70);
           }
 
           setStatusText('Posting story...');
@@ -331,7 +339,7 @@ export default function ShareStoryScreen() {
     uploadMedia();
   }, []);
 
-  const label = target === 'share'
+const label = target === 'share'
     ? 'Sending...'
     : isStory === 'true'
       ? 'Posting Story...'
