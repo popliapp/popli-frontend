@@ -5,7 +5,7 @@ import { showSuccess, showError } from '../store/toastStore';
 import { X, Lock, Zap, Coins } from 'lucide-react-native';
 import { useWalletStore } from '../store';
 import { useSystemConfig } from '../hooks/useSystemConfig';
-import { RazorpayWebView } from './RazorpayWebView';
+import { CashfreeWebView } from './CashfreeWebView';
 import { walletApi } from '../api/services';
 import { useAuthStore } from '../store/authStore';
 
@@ -23,7 +23,7 @@ export default function RechargeCoinsSheet({ visible, onClose, onSuccess }: Rech
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [step, setStep] = useState<Step>('idle');
   const [showConfirm, setShowConfirm] = useState(false);
-  const [razorpayOptions, setRazorpayOptions] = useState<any>(null);
+  const [paymentSession, setPaymentSession] = useState<{sessionId: string, orderId: string} | null>(null);
   const [confirming, setConfirming] = useState(false);
   const insets = useSafeAreaInsets();
 const { config, loading } = useSystemConfig();
@@ -85,7 +85,7 @@ const rateLabel = coinPackages.length > 0
 
   const handlePaymentSuccess = async (data: any) => {
     setStep('verifying');
-    setRazorpayOptions(null);
+    setPaymentSession(null);
 
     try {
       const res = await walletApi.verifyRechargePayment(
@@ -114,7 +114,7 @@ const rateLabel = coinPackages.length > 0
   };
 
   const handlePaymentFailed = (_data: any) => {
-    setRazorpayOptions(null);
+    setPaymentSession(null);
     setStep('idle');
     setConfirming(false);
     showError('Payment failed. Please try again.');
@@ -227,7 +227,7 @@ const rateLabel = coinPackages.length > 0
                 <View className="flex-row items-center gap-1.5">
                   <Lock size={12} color="#9CA3AF" />
                   <Text className="text-white/50 text-xs">
-                    Secured via Razorpay - PCI-DSS compliant
+                    Secured via Cashfree - PCI-DSS compliant
                   </Text>
                 </View>
                 <Zap size={14} color="#6B7280" />

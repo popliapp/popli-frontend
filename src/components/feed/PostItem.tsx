@@ -120,7 +120,7 @@ const handleDoubleTap = useCallback(() => {
 
   const copyLink = async () => {
     // In a real app, you'd use deep links. Assuming web fallback here.
-   const url = `https://poplibackend.onrender.com/post/${item.id}`;
+    const url = `http://192.168.1.5:3001/post/${item.id}`;
     await Clipboard.setStringAsync(url);
     setShowOptionsModal(false);
   };

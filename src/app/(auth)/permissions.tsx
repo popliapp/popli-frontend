@@ -3,7 +3,10 @@ import { View, Text, Pressable, Platform, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../store';
 import { ChevronLeft, Sparkles, Bell, Image, Camera, Mic } from 'lucide-react-native';
-import messaging, { AuthorizationStatus } from '@react-native-firebase/messaging';
+let messaging: any = null;
+if (Platform.OS !== 'web') {
+  messaging = require('@react-native-firebase/messaging').default;
+}
 import * as MediaLibrary from 'expo-media-library';
 
 import * as ImagePicker from 'expo-image-picker';
@@ -26,6 +29,7 @@ const requestOsPermission = async (key: 'notifications' | 'media' | 'camera' | '
     try {
       switch (key) {
  case 'notifications': {
+          if (Platform.OS === 'web' || !messaging) return false;
           const status = await messaging().requestPermission();
           return status === messaging.AuthorizationStatus.AUTHORIZED || status === messaging.AuthorizationStatus.PROVISIONAL;
         }

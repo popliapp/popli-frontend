@@ -4,9 +4,9 @@ import { WebView } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const LEGAL_URLS: Record<string, string> = {
-  terms: 'https://popli-app.onrender.com/terms',
-  privacy: 'https://popli-app.onrender.com/privacy',
-  guidelines: 'https://popli-app.onrender.com/guidelines',
+  terms: 'http://192.168.1.5:5173/terms',
+  privacy: 'http://192.168.1.5:5173/privacy',
+  guidelines: 'http://192.168.1.5:5173/guidelines',
 };
 
 const LEGAL_TITLES: Record<string, string> = {
