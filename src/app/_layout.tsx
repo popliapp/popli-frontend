@@ -12,7 +12,7 @@ Sentry.init({
 import React, { useEffect } from 'react';
 import { Stack, router, useSegments, useRootNavigationState } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, Platform, ActivityIndicator } from 'react-native';
+import { View, Platform, ActivityIndicator, Text } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
@@ -60,7 +60,10 @@ function RootLayout() {
     const verifyApiConnection = async () => {
       console.log(`[STARTUP] Verifying API Connection to: ${BASE_URL}`);
       try {
-        const response = await axios.get(`${BASE_URL}/health`, { timeout: 3000 });
+        const response = await axios.get(`${BASE_URL}/health`, { 
+          timeout: 3000,
+          headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
         if (response.status === 200) {
           console.log(`✅ [STARTUP] API Connected successfully to ${BASE_URL}`);
         }

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, Pressable, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, MessageCircle, AlertTriangle, ChevronDown, ChevronUp, Sparkles, Send } from 'lucide-react-native';
-import { FAQ_LIST } from '../constants/staticData';
+import { FAQ_LIST_TEMPLATE } from '../constants/staticData';
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import { useSystemConfig } from '../hooks/useSystemConfig';
 import { showSuccess } from '../store/toastStore';
 
 export default function SupportScreen() {
   const router = useRouter();
+  const { config } = useSystemConfig();
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
   const [ticketSubject, setTicketSubject] = useState('');
   const [ticketDescription, setTicketDescription] = useState('');
@@ -139,7 +141,13 @@ const [isSubmitting, setIsSubmitting] = useState(false);
         <View className="gap-4 pb-24">
           <Text className="text-white/60 text-[10px] font-bold uppercase pl-1">Creator FAQs</Text>
           <View className="gap-3">
-            {FAQ_LIST.map((faq, i) => {
+            {FAQ_LIST_TEMPLATE.map((item, i) => {
+              const faq = {
+                ...item,
+                a: item.a
+                  .replace('{VIEW_RATE}', String(config?.viewRatePer1000 || 5))
+                  .replace('{MIN_WITHDRAWAL}', String(config?.minWithdrawalInr || 100)),
+              };
               const isExpanded = expandedIndex === i;
               return (
                 <View 

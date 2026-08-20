@@ -189,7 +189,7 @@ if (configError || tdsPercent === null || feePercent === null || minWithdrawalIn
               </View>
 
           <View className="mb-5">
-                <Text className="text-gray-400 font-bold text-[10px] uppercase tracking-wider mb-2">Withdrawal Amount (Min ₹500)</Text>
+                <Text className="text-gray-400 font-bold text-[10px] uppercase tracking-wider mb-2">Withdrawal Amount (Min ₹{minWithdrawalInr})</Text>
               <TextInput 
                   value={amount}
                   onChangeText={(v) => { setAmount(v); if (amountError) setAmountError(''); }}
@@ -204,7 +204,7 @@ if (configError || tdsPercent === null || feePercent === null || minWithdrawalIn
                     <Text className="text-red-400 text-xs font-medium">{amountError}</Text>
                   </View>
                 ) : null}
-            {amount !== '' && parseFloat(amount) >= 500 && (
+            {amount !== '' && parseFloat(amount) >= (minWithdrawalInr || 1) && (
                   <View className="bg-[#12081E] border border-[#3E2B5C] rounded-xl p-4 mt-3 gap-2">
                     <View className="flex-row justify-between">
                       <Text className="text-gray-400 text-xs">Requested</Text>

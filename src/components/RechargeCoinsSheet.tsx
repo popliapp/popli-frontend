@@ -58,19 +58,9 @@ const rateLabel = coinPackages.length > 0
       const userProfile = useAuthStore.getState().userProfile;
       const orderData = orderRes.data;
 
-      setRazorpayOptions({
-        key: orderData.keyId,
-        order_id: orderData.orderId,
-        amount: orderData.amount,
-        currency: 'INR',
-        name: 'Popli',
-        description: orderData.coins + ' Pop Coins',
-        theme: { color: '#A855F7' },
-        prefill: {
-          contact: userProfile?.phone || '',
-          name: userProfile?.name || '',
-          email: userProfile?.email || '',
-        },
+      setPaymentSession({
+        sessionId: orderData.payment_session_id,
+        orderId: orderData.orderId
       });
 
       onClose();
@@ -88,10 +78,8 @@ const rateLabel = coinPackages.length > 0
     setPaymentSession(null);
 
     try {
-      const res = await walletApi.verifyRechargePayment(
-        data.razorpay_order_id,
-        data.razorpay_payment_id,
-        data.razorpay_signature,
+      const res = await walletApi.verifyCashfreePayment(
+        paymentSession!.orderId
       );
 
       const { coinBalance, coinsAdded, duplicate } = res.data;
@@ -121,7 +109,7 @@ const rateLabel = coinPackages.length > 0
   };
 
   const handlePaymentDismiss = () => {
-    setRazorpayOptions(null);
+    setPaymentSession(null);
     setStep('idle');
     setConfirming(false);
   };
@@ -277,10 +265,11 @@ const rateLabel = coinPackages.length > 0
         )}
       </Modal>
 
-      {razorpayOptions && step === 'payment_open' && (
-        <RazorpayWebView
+      {paymentSession && step === 'payment_open' && (
+        <CashfreeWebView
           isVisible={true}
-          options={razorpayOptions}
+          environment="production"
+          paymentSessionId={paymentSession.sessionId}
           onSuccess={handlePaymentSuccess}
           onFailed={handlePaymentFailed}
           onClose={handlePaymentDismiss}

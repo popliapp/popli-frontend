@@ -79,7 +79,7 @@ export default function OnboardingScreen() {
           <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>Skip</Text>
         </TouchableOpacity>
       </View>
-
+     
       <View style={{ alignItems: 'center', marginTop: 28 }}>
         <View style={{
           width: 180, height: 260, borderRadius: 28,

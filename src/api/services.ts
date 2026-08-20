@@ -49,7 +49,7 @@ export const notificationsApi = {
 export const walletApi = {
   getWallet: () => apiClient.get('/wallet'),
   createRechargeOrder: (packageId: string) => apiClient.post('/wallet/recharge/create-order', { packageId }),
-  verifyRechargePayment: (orderId: string, _p1?: string, _p2?: string) =>
+  verifyCashfreePayment: (orderId: string) =>
     apiClient.post('/wallet/recharge/verify', { orderId }),
   getPaymentHistory: () => apiClient.get('/wallet/payments'),
   withdraw: (amount: number, upiId: string) => apiClient.post('/wallet/withdraw', { amount, upiId }),

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, StyleSheet, TouchableOpacity, Text, View } from 'react-native';
+import { Modal, StyleSheet, TouchableOpacity, Text, View, Linking, Platform } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -86,17 +86,82 @@ export const CashfreeWebView: React.FC<CashfreeWebViewProps> = ({
     } catch {}
   };
 
+  const webviewRef = React.useRef<WebView>(null);
+
+  const handleCustomUrl = (url: string) => {
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('about:')) return;
+
+    let targetUrl = url;
+
+    // React Native Linking doesn't natively parse "intent://" URLs.
+    // We must convert "intent://pay?pa=...#Intent;scheme=upi;package=com.phonepe.app;end"
+    // into "upi://pay?pa=..." so that the phone can open it.
+    if (url.startsWith('intent://')) {
+      const schemeMatch = url.match(/scheme=([^;]+)/);
+      const scheme = schemeMatch && schemeMatch[1] ? schemeMatch[1] : 'upi';
+      targetUrl = url.replace('intent://', `${scheme}://`).split('#Intent')[0];
+    }
+
+    Linking.openURL(targetUrl).catch(() => {
+      console.log('Cannot open URL scheme, redirecting to PlayStore:', targetUrl);
+      
+      let playStoreUrl = '';
+      if (url.startsWith('intent://') && url.includes('package=')) {
+        const pkgMatch = url.match(/package=([^;]+)/);
+        if (pkgMatch && pkgMatch[1]) {
+          playStoreUrl = `market://details?id=${pkgMatch[1]}`;
+        }
+      } else if (targetUrl.startsWith('phonepe://')) {
+        playStoreUrl = 'market://details?id=com.phonepe.app';
+      } else if (targetUrl.startsWith('gpay://') || targetUrl.startsWith('tez://')) {
+        playStoreUrl = 'market://details?id=com.google.android.apps.nbu.paisa.user';
+      } else if (targetUrl.startsWith('paytmmp://') || targetUrl.startsWith('paytm://')) {
+        playStoreUrl = 'market://details?id=net.one97.paytm';
+      } else if (targetUrl.startsWith('bhim://')) {
+        playStoreUrl = 'market://details?id=in.org.npci.upiapp';
+      }
+      
+      if (playStoreUrl) {
+        Linking.openURL(playStoreUrl).catch(e => {
+          Linking.openURL(playStoreUrl.replace('market://details?id=', 'https://play.google.com/store/apps/details?id='));
+        });
+      } else if (targetUrl.startsWith('upi://')) {
+         Linking.openURL('https://play.google.com/store/search?q=upi&c=apps');
+      }
+    });
+  };
+
   return (
     <Modal visible={isVisible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
         <WebView
+          ref={webviewRef}
           source={{ html: htmlContent }}
+          originWhitelist={['*']}
           onMessage={handleMessage}
+          onShouldStartLoadWithRequest={(request) => {
+            const url = request.url;
+            if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('about:')) {
+              return true;
+            }
+            handleCustomUrl(url);
+            return false;
+          }}
+          onNavigationStateChange={(navState) => {
+            if (navState.url.includes('popli.app')) {
+              onSuccess({ orderId: 'redirected' });
+            }
+            if (!navState.url.startsWith('http://') && !navState.url.startsWith('https://') && !navState.url.startsWith('about:')) {
+              webviewRef.current?.stopLoading();
+              handleCustomUrl(navState.url);
+            }
+          }}
           style={styles.webview}
           javaScriptEnabled
           domStorageEnabled
           startInLoadingState
           allowsInlineMediaPlayback
+          userAgent={Platform.OS === 'android' ? 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Mobile Safari/537.36' : undefined}
         />
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.8}>

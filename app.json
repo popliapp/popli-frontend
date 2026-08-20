@@ -23,12 +23,12 @@
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
       "package": "com.mahak2004.popliapp",
-     "googleServicesFile": "./google-services.json",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
-       "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
         "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
         "android.permission.POST_NOTIFICATIONS",
@@ -58,11 +58,11 @@
         }
       ]
     },
-"web": {
+    "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-  "plugins": [
+    "plugins": [
       "./plugins/withUcropStrings.js",
       "./plugins/withReelUploadService.js",
       "expo-router",
@@ -116,17 +116,16 @@
       "expo-sharing",
       "expo-localization",
       "expo-web-browser",
-     [
-  "@sentry/react-native",
-  {
-    "organization": "popli",
-    "project": "react-native"
-  }
-],
+      [
+        "@sentry/react-native",
+        {
+          "organization": "popli",
+          "project": "react-native"
+        }
+      ],
       "@react-native-firebase/analytics"
     ],
-"updates": {
-      "url": "https://u.expo.dev/2c5afdb0-a7d5-4847-91fd-93dedfbfdf93",
+    "updates": {
       "fallbackToCacheTimeout": 0,
       "enabled": true,
       "checkAutomatically": "ON_LOAD"
@@ -141,7 +140,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "2c5afdb0-a7d5-4847-91fd-93dedfbfdf93"
+        "projectId": "927c1bb4-a501-41f9-9382-ee32a909daca"
       }
     }
   }
