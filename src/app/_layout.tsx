@@ -50,7 +50,8 @@ function RootLayout() {
   const [fontsLoaded] = useFonts({
     'DancingScript': require('../../assets/fonts/DancingScript-Bold.ttf'),
   });
-  const { isLoggedIn, isOnboarded, userProfile, onboardingStep } = useAuthStore();
+  const isLoggedIn = useAuthStore(s => s.isLoggedIn);
+  const isOnboarded = useAuthStore(s => s.isOnboarded);
   const segments = useSegments();
   const rootNavigationState = useRootNavigationState();
 

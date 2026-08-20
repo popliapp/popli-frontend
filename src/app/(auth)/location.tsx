@@ -64,7 +64,7 @@ setNearbyEnabled(true);
 useAuthStore.getState().setOnboardingStep('permissions');
 updateProfile({ city: cityName }).catch(() => {});
 setIsGPSLoading(false);
-setTimeout(() => router.replace('/(auth)/permissions'), 50);
+router.push('/(auth)/permissions');
     } catch {
       setIsGPSLoading(false);
     }
@@ -73,7 +73,7 @@ setTimeout(() => router.replace('/(auth)/permissions'), 50);
 const handleNext = () => {
   if (!selectedCity) return;
   useAuthStore.getState().setOnboardingStep('permissions');
-  setTimeout(() => router.replace('/(auth)/permissions'), 50);
+  router.push('/(auth)/permissions');
 };
   return (
     <View className="flex-1 bg-[#0B001A] px-6" style={{ paddingTop: Platform.OS === 'ios' ? 60 : 40, paddingBottom: 32 }}>
