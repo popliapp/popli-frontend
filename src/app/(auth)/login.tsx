@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-
+import { sendFirebaseOTP } from '../../lib/firebase';
 
 GoogleSignin.configure({
   webClientId: '576573661357-huruthf92t81ohv6k1l2el6cm9q32ip5.apps.googleusercontent.com',
@@ -87,7 +87,6 @@ export default function LoginScreen() {
       }
 
       // Call Firebase to send real OTP
-      const { sendFirebaseOTP } = require('../../lib/firebase');
       await sendFirebaseOTP(trimmed);
 
       setIsLoading(false);

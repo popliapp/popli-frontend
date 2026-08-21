@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiClient } from '../../api/client';
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { LinearGradient } from 'expo-linear-gradient';
-
+import { sendFirebaseOTP } from '../../lib/firebase';
 export default function SignupScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -218,7 +218,6 @@ export default function SignupScreen() {
       }
       
       // Call Firebase to send real OTP
-      const { sendFirebaseOTP } = require('../../lib/firebase');
       await sendFirebaseOTP(targetPhone);
 
       // Route user to OTP confirmation
