@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import * as Sentry from '@sentry/react-native';
 
-const BACKEND_FALLBACK = 'http://192.168.1.5:3001';
+const BACKEND_FALLBACK = 'https://popli-backend.onrender.com';
 
 const resolveBaseUrl = () => {
   // 1. Primary: Use exactly what is configured in .env

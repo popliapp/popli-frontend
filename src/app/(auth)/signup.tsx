@@ -202,7 +202,7 @@ export default function SignupScreen() {
       const targetPhone = `+91${mobileTrimmed}`;
       
       // 1. Check if user already exists
-  const checkRes = await apiClient.post('/auth/check-user', { 
+      const checkRes = await apiClient.post('/auth/check-user', { 
         identifier: targetPhone,
         username: usernameTrimmed,
       });
@@ -216,9 +216,14 @@ export default function SignupScreen() {
         }
         return;
       }
+      
+      // Call Firebase to send real OTP
+      const { sendFirebaseOTP } = require('../../lib/firebase');
+      await sendFirebaseOTP(targetPhone);
+
       // Route user to OTP confirmation
       setIsLoading(false);
-     router.push({
+      router.push({
         pathname: '/(auth)/otp',
         params: { 
           target: targetPhone, 

@@ -80,11 +80,16 @@ export default function LoginScreen() {
 
     try {
       const checkRes = await apiClient.post('/auth/check-user', { identifier: trimmed });
-  if (!checkRes.data.exists) {
+      if (!checkRes.data.exists) {
         setIsLoading(false);
         setShowNotFound(true);
         return;
       }
+
+      // Call Firebase to send real OTP
+      const { sendFirebaseOTP } = require('../../lib/firebase');
+      await sendFirebaseOTP(trimmed);
+
       setIsLoading(false);
       router.push({
         pathname: '/(auth)/otp',

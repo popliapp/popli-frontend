@@ -63,8 +63,9 @@ export default function OTPScreen() {
 
     try {
       if (isOtpComplete) {
-        // 1. Verify OTP natively or use bypass
+        // 1. Verify OTP using real Firebase verification
         const otpString = otp.join('');
+        const idToken = await verifyFirebaseOTP(otpString);
 
         // 2. Ensure deviceId is generated and stored persistently
         let deviceId = await SecureStore.getItemAsync('deviceId');
@@ -73,11 +74,12 @@ export default function OTPScreen() {
           await SecureStore.setItemAsync('deviceId', deviceId);
         }
 
-        // 3. Authenticate with backend using the bypass
-   console.log('=== OTP SCREEN PARAMS ===', JSON.stringify(params));
-        const response = await apiClient.post('/auth/demo-login', {
-          otp: otpString,
+        // 3. Authenticate with backend using the real verification endpoint
+        console.log('=== OTP SCREEN PARAMS ===', JSON.stringify(params));
+        const response = await apiClient.post('/auth/verify-firebase-token', {
+          idToken,
           phone: params.phone || params.target,
+          deviceId,
           referredByCode: params.referredByCode || undefined,
         });
 
