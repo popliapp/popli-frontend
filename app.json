@@ -116,13 +116,6 @@
       "expo-sharing",
       "expo-localization",
       "expo-web-browser",
-      [
-        "@sentry/react-native",
-        {
-          "organization": "popli",
-          "project": "react-native"
-        }
-      ],
       "@react-native-firebase/analytics"
     ],
     "updates": {
